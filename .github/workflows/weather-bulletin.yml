@@ -1,0 +1,33 @@
+name: 📰 Bulletin Météo Quotidien
+
+on:
+  schedule:
+    # 20h Paris = 18h UTC (heure d'été) ou 19h UTC (heure d'hiver)
+    # On utilise 18h UTC pour couvrir les deux cas
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+jobs:
+  send-bulletin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Install dependencies
+        run: pip install requests pytz
+
+      - name: 🕐 Current time
+        run: |
+          echo "🕐 UTC: $(date -u '+%H:%M')"
+          echo "🕐 Paris (estimé): $(date -u -d '+2 hours' '+%H:%M')"
+
+      - name: 📰 Send weather bulletin
+        run: python weather_bulletin.py
