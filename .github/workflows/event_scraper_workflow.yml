@@ -1,0 +1,40 @@
+name: 🔄 Mise à jour événements
+
+on:
+  schedule:
+    # 2 fois par jour: 6h et 14h UTC (8h et 16h Paris)
+    - cron: "0 6,14 * * *"
+  workflow_dispatch:
+
+jobs:
+  scrape-events:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: 🔍 Scrape events
+        run: python events_scraper.py
+
+      - name: 📝 Commit changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add planned_events.json
+          git diff --staged --quiet || git commit -m "🔄 Mise à jour automatique des événements"
+
+      - name: 📤 Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
