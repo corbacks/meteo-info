@@ -343,7 +343,7 @@ def format_weather_bulletin(tomorrow_info, forecasts):
     if planned:
         has_events = True
         description += "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-        description += "┃  **🔔 ÉVÉNEMENTS IMPORTANTS**┃\n"
+        description += "┃  **🔔 ÉVÉNEMENTS IMPORTANTS**  ┃\n"
         description += "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n"
         for p in planned:
             emoji_map = {
