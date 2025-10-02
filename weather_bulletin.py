@@ -160,42 +160,42 @@ def get_historical_event(day, month):
         # --- FÉVRIER ---
         (14, 2): "1876 : Alexander Graham Bell dépose un brevet pour le téléphone ☎️📜",
         (21, 2): "1965 : Malcolm X est assassiné",
-        (27, 2): "1933 : Première diffusion d'un film au cinéma parlant aux États-Unis",
+        (27, 2): "1933 : Première diffusion d'un film au cinéma parlant aux États-Unis 🎥🎬",
 
         # --- MARS ---
         (8, 3): "1910 : Premier vol d'une femme pilote, Raymonde de Laroche ✈️👩‍✈️",
         (15, 3): "44 av. J.-C. : Assassinat de Jules César 🏛️⚔️",
-        (20, 3): "2003 : Début de la guerre en Irak",
+        (20, 3): "2003 : Début de la guerre en Irak 🪖",
         (22, 3): "1963 : Martin Luther King prononce 'I Have a Dream' à Birmingham",
 
         # --- AVRIL ---
         (1, 4): "1976 : Création d'Apple Computer 🍏💻",
         (12, 4): "1961 : Youri Gagarine, premier homme dans l'espace 🚀🌕",
         (15, 4): "1912 : Naufrage du Titanic 🛳️❄️",
-        (25, 4): "1953 : Découverte de la structure de l'ADN",
+        (25, 4): "1953 : Découverte de la structure de l'ADN 🧬",
 
         # --- MAI ---
         (1, 5): "1886 : Début de la grève de Haymarket à Chicago ✊🏙️",
         (8, 5): "1945 : Fin de la Seconde Guerre mondiale en Europe 🕊️🇪🇺",
-        (17, 5): "1954 : Arrêt Brown v. Board of Education aux États-Unis",
-        (29, 5): "1953 : Edmund Hillary et Tenzing Norgay atteignent le sommet de l'Everest",
+        (17, 5): "1954 : Arrêt Brown v. Board of Education aux États-Unis 🗽",
+        (29, 5): "1953 : Edmund Hillary et Tenzing Norgay atteignent le sommet de l'Everest 🏔️",
 
         # --- JUIN ---
         (6, 6): "1944 : Débarquement de Normandie 🪖🌊",
-        (16, 6): "1963 : Valentina Terechkova devient la première femme dans l'espace",
-        (20, 6): "1789 : Serment du Jeu de Paume",
-        (26, 6): "1945 : Charte des Nations Unies signée",
+        (16, 6): "1963 : Valentina Terechkova devient la première femme dans l'espace 👩‍🚀🚀",
+        (20, 6): "1789 : Serment du Jeu de Paume 📖",
+        (26, 6): "1945 : Charte des Nations Unies signée 📑",
 
         # --- JUILLET ---
         (14, 7): "1789 : Prise de la Bastille 🏰🔥",
         (20, 7): "1969 : Neil Armstrong marche sur la Lune 🌕👨‍🚀",
-        (25, 7): "1978 : Naissance de Louise Brown, premier bébé-éprouvette",
+        (25, 7): "1978 : Naissance de Louise Brown, premier bébé-éprouvette 🍼",
 
         # --- AOÛT ---
         (6, 8): "1945 : Bombardement atomique d'Hiroshima ☢️💥",
         (9, 8): "1945 : Bombardement atomique de Nagasaki ☢️💥",
-        (15, 8): "1947 : Indépendance de l'Inde",
-        (30, 8): "1963 : Martin Luther King prononce 'I Have a Dream'",
+        (15, 8): "1947 : Indépendance de l'Inde ",
+        (30, 8): "1963 : Martin Luther King prononce 'I Have a Dream' 💭",
 
         # --- SEPTEMBRE ---
         (11, 9): "2001 : Attentats du World Trade Center 🗽💔",
@@ -206,18 +206,18 @@ def get_historical_event(day, month):
         (1, 10): "1949 : Proclamation de la République populaire de Chine 🇨🇳🏛️",
         (3, 10): "1990 : Réunification allemande 🇩🇪🤝",
         (12, 10): "1492 : Christophe Colomb découvre l'Amérique ⛵🌎",
-        (24, 10): "1929 : Krach boursier de Wall Street",
+        (24, 10): "1929 : Krach boursier de Wall Street 📉💲",
 
         # --- NOVEMBRE ---
         (9, 11): "1989 : Chute du mur de Berlin 🧱⚡",
         (11, 11): "1918 : Armistice de la Première Guerre mondiale 🕊️",
-        (22, 11): "1963 : Assassinat de John F. Kennedy",
-        (20, 11): "1945 : Fondation de l'UNESCO",
+        (22, 11): "1963 : Assassinat de John F. Kennedy 🕊️",
+        (20, 11): "1945 : Fondation de l'UNESCO 🏛️",
 
         # --- DÉCEMBRE ---
         (7, 12): "1941 : Attaque de Pearl Harbor ⚓💥",
         (10, 12): "1948 : Adoption de la Déclaration universelle des droits de l'homme 📜✊",
-        (25, 12): "800 : Couronnement de Charlemagne"
+        (25, 12): "800 : Couronnement de Charlemagne 👑"
 
     }
     return events.get((day, month), None)
