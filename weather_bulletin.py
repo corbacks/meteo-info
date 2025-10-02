@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Bulletin météo quotidien à 20h avec prévisions du lendemain
-Source: Open-Meteo API (données fiables)
+Version améliorée avec style moderne et emojis
 """
 import requests
 import json
@@ -35,7 +35,8 @@ def get_tomorrow_date():
         'month': tomorrow.month,
         'month_name': month_name,
         'year': tomorrow.year,
-        'date_obj': tomorrow
+        'date_obj': tomorrow,
+        'is_weekend': tomorrow.weekday() >= 5
     }
 
 def get_planned_events(date_obj):
@@ -222,13 +223,15 @@ def get_historical_event(day, month):
     }
     return events.get((day, month), None)
 
+
 def get_weather_forecast():
-    """Récupère météo via Open-Meteo (API fiable et gratuite)"""
+    """Récupère météo via Open-Meteo"""
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
         'latitude': LATITUDE,
         'longitude': LONGITUDE,
-        'hourly': 'temperature_2m,precipitation_probability,weathercode,windspeed_10m',
+        'hourly': 'temperature_2m,precipitation_probability,weathercode,windspeed_10m,apparent_temperature',
+        'daily': 'sunrise,sunset,uv_index_max',
         'timezone': 'Europe/Paris',
         'forecast_days': 2
     }
@@ -245,8 +248,11 @@ def get_weather_forecast():
 def extract_tomorrow_forecast(data):
     """Extrait prévisions pour 8h, 12h, 16h, 20h de demain"""
     hourly = data.get('hourly', {})
+    daily = data.get('daily', {})
+    
     times = hourly.get('time', [])
     temps = hourly.get('temperature_2m', [])
+    apparent_temps = hourly.get('apparent_temperature', [])
     precip = hourly.get('precipitation_probability', [])
     weather_codes = hourly.get('weathercode', [])
     wind_speeds = hourly.get('windspeed_10m', [])
@@ -261,10 +267,17 @@ def extract_tomorrow_forecast(data):
             if hour in [8, 12, 16, 20]:
                 forecasts[hour] = {
                     'temp': temps[i],
+                    'feels_like': apparent_temps[i] if i < len(apparent_temps) else temps[i],
                     'precip': precip[i] if i < len(precip) else 0,
                     'weather_code': weather_codes[i],
                     'wind': wind_speeds[i]
                 }
+    
+    # Données journalières
+    if daily and 'sunrise' in daily:
+        forecasts['sunrise'] = daily['sunrise'][1] if len(daily['sunrise']) > 1 else None
+        forecasts['sunset'] = daily['sunset'][1] if len(daily['sunset']) > 1 else None
+        forecasts['uv_max'] = daily['uv_index_max'][1] if len(daily.get('uv_index_max', [])) > 1 else None
     
     return forecasts
 
@@ -294,23 +307,44 @@ def get_weather_description(code):
     }
     return descriptions.get(code, "Conditions variables")
 
+def get_wind_description(speed):
+    """Description du vent selon la vitesse"""
+    if speed < 10:
+        return "Léger"
+    elif speed < 20:
+        return "Modéré"
+    elif speed < 30:
+        return "Assez fort"
+    elif speed < 40:
+        return "Fort"
+    else:
+        return "Très fort"
+
 def format_weather_bulletin(tomorrow_info, forecasts):
-    """Formate le bulletin complet"""
+    """Formate le bulletin complet avec style amélioré"""
     if not forecasts:
         return None
     
     day = tomorrow_info['day_num']
     month = tomorrow_info['month']
     date_obj = tomorrow_info['date_obj']
+    is_weekend = tomorrow_info['is_weekend']
     
     planned = get_planned_events(date_obj)
     journee = get_journee_mondiale(day, month)
     event = get_historical_event(day, month)
     
-    description = f"📅 **{tomorrow_info['formatted'].upper()}**\n"
+    # En-tête avec emoji de jour
+    day_emoji = "🎉" if is_weekend else "📅"
+    description = f"{day_emoji} **{tomorrow_info['formatted'].upper()}**\n\n"
     
-    # Événements programmés (grèves, jours fériés...)
+    # Section événements avec encadré
+    has_events = False
     if planned:
+        has_events = True
+        description += "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
+        description += "┃  **🔔 ÉVÉNEMENTS IMPORTANTS**┃\n"
+        description += "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n"
         for p in planned:
             emoji_map = {
                 'greve': '🚨',
@@ -320,48 +354,114 @@ def format_weather_bulletin(tomorrow_info, forecasts):
             }
             emoji = emoji_map.get(p.get('type', 'autre'), 'ℹ️')
             desc_text = p.get('description', '')[:150]
-            description += f"\n{emoji} **{p['title']}**\n{desc_text}\n"
+            description += f"{emoji} **{p['title']}**\n_{desc_text}_\n\n"
     
-    # Journée mondiale
+    # Culture
+    culture_section = ""
     if journee:
-        description += f"\n🎉 **{journee}**\n"
-    
-    # Événement historique
+        culture_section += f"🌍 **{journee}**\n"
     if event:
-        description += f"\n📖 **Le saviez-vous ?**\n{event}\n"
+        culture_section += f"📜 **Il y a... {event.split(':')[0]}**\n{':'.join(event.split(':')[1:]).strip()}\n"
     
-    description += "\n━━━━━━━━━━━━━━━━━━━━━\n🌤️ **PRÉVISIONS MÉTÉO - LE HAVRE**\n━━━━━━━━━━━━━━━━━━━━━\n"
+    if culture_section:
+        if has_events:
+            description += "─────────────────────────────\n\n"
+        description += culture_section + "\n"
     
-    hours_labels = {
-        8: "🌅 **MATIN (8h)**",
-        12: "☀️ **MIDI (12h)**",
-        16: "🌆 **APRÈS-MIDI (16h)**",
-        20: "🌙 **SOIRÉE (20h)**"
-    }
+    # Séparateur météo stylisé
+    description += "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
+    description += "┃   🌤️ **MÉTÉO AU HAVRE**      ┃\n"
+    description += "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
     
-    for hour in [8, 12, 16, 20]:
+    # Infos soleil et UV
+    if 'sunrise' in forecasts and forecasts['sunrise']:
+        sunrise_time = forecasts['sunrise'].split('T')[1][:5]
+        sunset_time = forecasts['sunset'].split('T')[1][:5] if 'sunset' in forecasts else "N/A"
+        description += f"🌅 Lever : **{sunrise_time}** • 🌇 Coucher : **{sunset_time}**\n"
+    
+    if 'uv_max' in forecasts and forecasts['uv_max']:
+        uv = forecasts['uv_max']
+        if uv <= 2:
+            uv_text = "Faible"
+        elif uv <= 5:
+            uv_text = "Modéré"
+        elif uv <= 7:
+            uv_text = "Élevé"
+        else:
+            uv_text = "Très élevé"
+        description += f"☀️ Indice UV : **{uv:.0f}/10** ({uv_text})\n"
+    
+    description += "\n"
+    
+    # Prévisions horaires avec design compact
+    hours_config = [
+        (8, "🌅", "Matin"),
+        (12, "☀️", "Midi"),
+        (16, "🌆", "Après-midi"),
+        (20, "🌙", "Soirée")
+    ]
+    
+    for hour, emoji, label in hours_config:
         if hour in forecasts:
             f = forecasts[hour]
-            description += f"\n{hours_labels[hour]}\n"
-            description += f"{get_weather_emoji(f['weather_code'])} {get_weather_description(f['weather_code'])}\n"
-            description += f"🌡️ Température : **{f['temp']:.1f}°C**\n"
-            description += f"💧 Précipitations : {f['precip']}%\n"
-            description += f"💨 Vent : {f['wind']:.0f} km/h\n"
+            
+            # Température ressentie
+            feels_like = f.get('feels_like', f['temp'])
+            feels_diff = feels_like - f['temp']
+            feels_text = ""
+            if abs(feels_diff) >= 2:
+                if feels_diff > 0:
+                    feels_text = f" (ressenti {feels_like:.0f}°C)"
+                else:
+                    feels_text = f" (ressenti {feels_like:.0f}°C)"
+            
+            # Ligne condensée
+            description += f"{emoji} **{label} ({hour}h)** • {get_weather_emoji(f['weather_code'])} {get_weather_description(f['weather_code'])}\n"
+            description += f"   🌡️ **{f['temp']:.1f}°C**{feels_text} • 💧 {f['precip']}% • 💨 {f['wind']:.0f} km/h ({get_wind_description(f['wind'])})\n\n"
     
-    # Conseil du jour
-    avg_temp = sum(f['temp'] for f in forecasts.values()) / len(forecasts)
-    max_precip = max(f['precip'] for f in forecasts.values())
+    # Synthèse et conseil
+    avg_temp = sum(f['temp'] for h, f in forecasts.items() if isinstance(h, int)) / 4
+    max_precip = max(f['precip'] for h, f in forecasts.items() if isinstance(h, int))
+    avg_wind = sum(f['wind'] for h, f in forecasts.items() if isinstance(h, int)) / 4
     
-    if max_precip > 60:
-        conseil = "☂️ N'oubliez pas votre parapluie !"
-    elif avg_temp < 10:
-        conseil = "🧥 Pensez à vous couvrir !"
+    description += "┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n"
+    description += "**📊 RÉSUMÉ DE LA JOURNÉE**\n"
+    description += f"• Température moyenne : **{avg_temp:.1f}°C**\n"
+    description += f"• Probabilité de pluie max : **{max_precip:.0f}%**\n"
+    description += f"• Vent moyen : **{avg_wind:.0f} km/h**\n\n"
+    
+    # Conseils personnalisés
+    conseils = []
+    if max_precip > 70:
+        conseils.append("☂️ **Parapluie obligatoire** - Fortes pluies prévues")
+    elif max_precip > 40:
+        conseils.append("☂️ Prenez un parapluie par précaution")
+    
+    if avg_temp < 5:
+        conseils.append("🧥 **Habillez-vous chaudement** - Températures fraîches")
+    elif avg_temp < 12:
+        conseils.append("🧥 Prévoyez une veste")
     elif avg_temp > 25:
-        conseil = "😎 Profitez du beau temps !"
-    else:
-        conseil = "👌 Temps agréable prévu !"
+        conseils.append("🕶️ Pensez à vous hydrater")
     
-    description += f"\n💡 **Conseil du jour :** {conseil}"
+    if avg_wind > 30:
+        conseils.append("💨 **Vent fort** - Attention aux objets légers")
+    elif avg_wind > 20:
+        conseils.append("💨 Vent soutenu attendu")
+    
+    if 'uv_max' in forecasts and forecasts['uv_max'] and forecasts['uv_max'] > 6:
+        conseils.append("🧴 Protection solaire recommandée")
+    
+    if not conseils:
+        if is_weekend:
+            conseils.append("🎉 Bon week-end au Havre !")
+        else:
+            conseils.append("👌 Conditions agréables prévues")
+    
+    description += "**💡 CONSEILS**\n"
+    for conseil in conseils:
+        description += f"• {conseil}\n"
+    
     return description.strip()
 
 def send_bulletin():
@@ -379,17 +479,32 @@ def send_bulletin():
         print("❌ Impossible de formater le bulletin")
         return False
     
+    # Couleur selon météo dominante
+    avg_code = sum(f.get('weather_code', 0) for h, f in forecasts.items() if isinstance(h, int)) / 4
+    if avg_code < 3:
+        color = 0xFFD700  # Doré (beau temps)
+    elif avg_code < 50:
+        color = 0x87CEEB  # Bleu ciel (nuageux)
+    elif avg_code < 70:
+        color = 0x4682B4  # Bleu acier (pluie légère)
+    else:
+        color = 0x4169E1  # Bleu royal (pluie/orage)
+    
     embed = {
-        "title": "📰 Bulletin Quotidien",
+        "title": "📰 Bulletin Quotidien du Havre",
         "description": bulletin,
-        "color": 0x3498db,
-        "footer": {"text": "Bulletin automatique • Open-Meteo"},
+        "color": color,
+        "footer": {
+            "text": "🤖 Bulletin automatique • Données Open-Meteo • Mis à jour quotidiennement à 20h",
+            "icon_url": "https://cdn-icons-png.flaticon.com/512/1163/1163661.png"
+        },
         "timestamp": datetime.now().isoformat()
     }
     
     payload = {
-        "username": "📰 Bulletin Quotidien",
-        "content": f"<@&{ROLE_ID}>",
+        "username": "📰 Bulletin Le Havre",
+        "avatar_url": "https://cdn-icons-png.flaticon.com/512/1163/1163661.png",
+        "content": f"<@&{ROLE_ID}> **Votre bulletin quotidien est arrivé !** 🎯",
         "embeds": [embed]
     }
     
