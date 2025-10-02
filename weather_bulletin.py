@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Bulletin météo quotidien à 20h avec prévisions du lendemain
+Source: Open-Meteo API (données fiables)
 """
-import os
 import requests
 import json
 from datetime import datetime, timedelta
@@ -13,7 +13,7 @@ LATITUDE = 49.4944
 LONGITUDE = 0.1079
 
 def get_tomorrow_date():
-    """Obtient la date de demain"""
+    """Obtient la date de demain en heure de Paris"""
     try:
         import pytz
         paris_tz = pytz.timezone("Europe/Paris")
@@ -39,7 +39,7 @@ def get_tomorrow_date():
     }
 
 def get_planned_events(date_obj):
-    """Récupère les événements programmés"""
+    """Récupère les événements programmés depuis planned_events.json"""
     try:
         from pathlib import Path
         
@@ -56,7 +56,7 @@ def get_planned_events(date_obj):
         return []
 
 def get_journee_mondiale(day, month):
-    """Journées mondiales"""
+    """Journées mondiales importantes"""
     journees = {
         (1, 1): "Journée mondiale de la Paix",
         (4, 1): "Journée mondiale du braille",
@@ -88,7 +88,7 @@ def get_journee_mondiale(day, month):
     return journees.get((day, month), None)
 
 def get_historical_event(day, month):
-    """Événements historiques"""
+    """Événements historiques marquants"""
     events = {
         (1, 1): "1999 : Passage à l'euro dans 11 pays européens",
         (14, 2): "1876 : Alexander Graham Bell dépose un brevet pour le téléphone",
@@ -116,7 +116,7 @@ def get_historical_event(day, month):
     return events.get((day, month), None)
 
 def get_weather_forecast():
-    """Récupère météo via Open-Meteo"""
+    """Récupère météo via Open-Meteo (API fiable et gratuite)"""
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
         'latitude': LATITUDE,
@@ -131,11 +131,12 @@ def get_weather_forecast():
         response.raise_for_status()
         data = response.json()
         return extract_tomorrow_forecast(data)
-    except:
+    except Exception as e:
+        print(f"⚠️ Erreur météo: {e}")
         return None
 
 def extract_tomorrow_forecast(data):
-    """Extrait prévisions 8h, 12h, 16h, 20h"""
+    """Extrait prévisions pour 8h, 12h, 16h, 20h de demain"""
     hourly = data.get('hourly', {})
     times = hourly.get('time', [])
     temps = hourly.get('temperature_2m', [])
@@ -153,7 +154,7 @@ def extract_tomorrow_forecast(data):
             if hour in [8, 12, 16, 20]:
                 forecasts[hour] = {
                     'temp': temps[i],
-                    'precip': precip[i],
+                    'precip': precip[i] if i < len(precip) else 0,
                     'weather_code': weather_codes[i],
                     'wind': wind_speeds[i]
                 }
@@ -161,31 +162,33 @@ def extract_tomorrow_forecast(data):
     return forecasts
 
 def get_weather_emoji(code):
-    """Emoji météo"""
+    """Emoji météo selon code WMO"""
     emojis = {
-        0: "☀️", 1: "🌤️", 2: "🌤️", 3: "☁️",
+        0: "☀️", 1: "🌤️", 2: "⛅", 3: "☁️",
         45: "🌫️", 48: "🌫️",
-        51: "🌦️", 53: "🌦️", 55: "🌦️",
+        51: "🌦️", 53: "🌦️", 55: "🌧️",
         61: "🌧️", 63: "🌧️", 65: "🌧️",
         71: "❄️", 73: "❄️", 75: "❄️",
-        80: "🌧️", 81: "🌧️", 82: "🌧️",
+        80: "🌦️", 81: "🌧️", 82: "🌧️",
         95: "⛈️", 96: "⛈️", 99: "⛈️"
     }
     return emojis.get(code, "🌡️")
 
 def get_weather_description(code):
-    """Description météo"""
+    """Description météo en français"""
     descriptions = {
         0: "Ciel dégagé", 1: "Peu nuageux", 2: "Partiellement nuageux", 3: "Nuageux",
-        45: "Brouillard", 51: "Bruine légère", 53: "Bruine modérée",
+        45: "Brouillard", 48: "Brouillard givrant",
+        51: "Bruine légère", 53: "Bruine modérée", 55: "Bruine dense",
         61: "Pluie légère", 63: "Pluie modérée", 65: "Pluie forte",
         71: "Neige légère", 73: "Neige modérée", 75: "Neige forte",
-        80: "Averses légères", 81: "Averses modérées", 95: "Orage"
+        80: "Averses légères", 81: "Averses modérées", 82: "Averses fortes",
+        95: "Orage", 96: "Orage avec grêle", 99: "Orage violent"
     }
     return descriptions.get(code, "Conditions variables")
 
 def format_weather_bulletin(tomorrow_info, forecasts):
-    """Formate le bulletin"""
+    """Formate le bulletin complet"""
     if not forecasts:
         return None
     
@@ -199,19 +202,28 @@ def format_weather_bulletin(tomorrow_info, forecasts):
     
     description = f"📅 **{tomorrow_info['formatted'].upper()}**\n"
     
+    # Événements programmés (grèves, jours fériés...)
     if planned:
         for p in planned:
-            emoji_map = {'greve': '🚨', 'ferie': '🎉', 'exam': '📝', 'autre': 'ℹ️'}
+            emoji_map = {
+                'greve': '🚨',
+                'ferie': '🎉',
+                'transport': '🚌',
+                'autre': 'ℹ️'
+            }
             emoji = emoji_map.get(p.get('type', 'autre'), 'ℹ️')
-            description += f"\n{emoji} **{p['title']}**\n{p['description']}\n"
+            desc_text = p.get('description', '')[:150]
+            description += f"\n{emoji} **{p['title']}**\n{desc_text}\n"
     
+    # Journée mondiale
     if journee:
         description += f"\n🎉 **{journee}**\n"
     
+    # Événement historique
     if event:
         description += f"\n📖 **Le saviez-vous ?**\n{event}\n"
     
-    description += "\n━━━━━━━━━━━━━━━━━━━━━━\n🌤️ **PRÉVISIONS MÉTÉO - LE HAVRE**\n━━━━━━━━━━━━━━━━━━━━━━\n"
+    description += "\n━━━━━━━━━━━━━━━━━━━━━\n🌤️ **PRÉVISIONS MÉTÉO - LE HAVRE**\n━━━━━━━━━━━━━━━━━━━━━\n"
     
     hours_labels = {
         8: "🌅 **MATIN (8h)**",
@@ -229,11 +241,12 @@ def format_weather_bulletin(tomorrow_info, forecasts):
             description += f"💧 Précipitations : {f['precip']}%\n"
             description += f"💨 Vent : {f['wind']:.0f} km/h\n"
     
+    # Conseil du jour
     avg_temp = sum(f['temp'] for f in forecasts.values()) / len(forecasts)
     max_precip = max(f['precip'] for f in forecasts.values())
     
     if max_precip > 60:
-        conseil = "☔ N'oubliez pas votre parapluie !"
+        conseil = "☂️ N'oubliez pas votre parapluie !"
     elif avg_temp < 10:
         conseil = "🧥 Pensez à vous couvrir !"
     elif avg_temp > 25:
@@ -245,14 +258,19 @@ def format_weather_bulletin(tomorrow_info, forecasts):
     return description.strip()
 
 def send_bulletin():
-    """Envoie le bulletin"""
+    """Envoie le bulletin sur Discord"""
     tomorrow = get_tomorrow_date()
     forecasts = get_weather_forecast()
     
     if not forecasts:
+        print("❌ Impossible de récupérer la météo")
         return False
     
     bulletin = format_weather_bulletin(tomorrow, forecasts)
+    
+    if not bulletin:
+        print("❌ Impossible de formater le bulletin")
+        return False
     
     embed = {
         "title": "📰 Bulletin Quotidien",
@@ -269,19 +287,23 @@ def send_bulletin():
     }
     
     try:
-        requests.post(WEBHOOK_URL, json=payload, timeout=15).raise_for_status()
+        response = requests.post(WEBHOOK_URL, json=payload, timeout=15)
+        response.raise_for_status()
         return True
-    except:
+    except Exception as e:
+        print(f"❌ Erreur Discord: {e}")
         return False
 
 def main():
-    print("BULLETIN MÉTÉO QUOTIDIEN")
-    print(f"Exécution: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    print("  BULLETIN MÉTÉO QUOTIDIEN")
+    print(f"  {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     
     if send_bulletin():
-        print("✅ Bulletin envoyé")
+        print("✅ Bulletin envoyé avec succès")
     else:
-        print("❌ Échec")
+        print("❌ Échec de l'envoi")
 
 if __name__ == "__main__":
     main()
