@@ -112,7 +112,7 @@ def get_journee_mondiale(day, month):
         (12, 8): "Journée internationale de la jeunesse 🧑👩",
         (19, 8): "Journée mondiale de l'aide humanitaire 🏥🤲",
         (23, 8): "Journée internationale du souvenir de la traite négrière et de son abolition 🕯️✊🏾",
-        (29, 8): "Journée internationale contre les essais nucléaires ☢️🚫"
+        (29, 8): "Journée internationale contre les essais nucléaires ☢️🚫",
 
         # --- SEPTEMBRE ---
         (8, 9): "Journée internationale de l'alphabétisation ✏️📖",
