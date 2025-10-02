@@ -225,13 +225,13 @@ def get_historical_event(day, month):
 
 
 def get_weather_forecast():
-    """Récupère météo via Open-Meteo"""
+    """Récupère météo via Open-Meteo (aujourd'hui et demain pour comparaison)"""
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
         'latitude': LATITUDE,
         'longitude': LONGITUDE,
         'hourly': 'temperature_2m,precipitation_probability,weathercode,windspeed_10m,apparent_temperature',
-        'daily': 'sunrise,sunset,uv_index_max',
+        'daily': 'sunrise,sunset,uv_index_max,temperature_2m_max,temperature_2m_min',
         'timezone': 'Europe/Paris',
         'forecast_days': 2
     }
@@ -246,7 +246,7 @@ def get_weather_forecast():
         return None
 
 def extract_tomorrow_forecast(data):
-    """Extrait prévisions pour 8h, 12h, 16h, 20h de demain"""
+    """Extrait prévisions pour 8h, 12h, 16h, 20h de demain + données aujourd'hui"""
     hourly = data.get('hourly', {})
     daily = data.get('daily', {})
     
@@ -257,12 +257,16 @@ def extract_tomorrow_forecast(data):
     weather_codes = hourly.get('weathercode', [])
     wind_speeds = hourly.get('windspeed_10m', [])
     
-    tomorrow = datetime.now() + timedelta(days=1)
-    target_date = tomorrow.strftime('%Y-%m-%d')
+    today = datetime.now()
+    tomorrow = today + timedelta(days=1)
+    today_date = today.strftime('%Y-%m-%d')
+    tomorrow_date = tomorrow.strftime('%Y-%m-%d')
     
     forecasts = {}
+    
+    # Données de demain
     for i, time_str in enumerate(times):
-        if target_date in time_str:
+        if tomorrow_date in time_str:
             hour = int(time_str.split('T')[1].split(':')[0])
             if hour in [8, 12, 16, 20]:
                 forecasts[hour] = {
@@ -272,6 +276,30 @@ def extract_tomorrow_forecast(data):
                     'weather_code': weather_codes[i],
                     'wind': wind_speeds[i]
                 }
+    
+    # Données d'aujourd'hui pour comparaison
+    today_temps = []
+    today_precips = []
+    today_winds = []
+    for i, time_str in enumerate(times):
+        if today_date in time_str:
+            hour = int(time_str.split('T')[1].split(':')[0])
+            if hour in [8, 12, 16, 20]:
+                today_temps.append(temps[i])
+                today_precips.append(precip[i] if i < len(precip) else 0)
+                today_winds.append(wind_speeds[i])
+    
+    if today_temps:
+        forecasts['today_avg_temp'] = sum(today_temps) / len(today_temps)
+        forecasts['today_max_precip'] = max(today_precips)
+        forecasts['today_avg_wind'] = sum(today_winds) / len(today_winds)
+    
+    # Températures min/max journalières
+    if daily and 'temperature_2m_max' in daily:
+        forecasts['today_max_temp'] = daily['temperature_2m_max'][0] if len(daily['temperature_2m_max']) > 0 else None
+        forecasts['today_min_temp'] = daily['temperature_2m_min'][0] if len(daily['temperature_2m_min']) > 0 else None
+        forecasts['tomorrow_max_temp'] = daily['temperature_2m_max'][1] if len(daily['temperature_2m_max']) > 1 else None
+        forecasts['tomorrow_min_temp'] = daily['temperature_2m_min'][1] if len(daily['temperature_2m_min']) > 1 else None
     
     # Données journalières
     if daily and 'sunrise' in daily:
@@ -342,9 +370,11 @@ def format_weather_bulletin(tomorrow_info, forecasts):
     has_events = False
     if planned:
         has_events = True
-        description += "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-        description += "┃  **🔔 ÉVÉNEMENTS IMPORTANTS**  ┃\n"
-        description += "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n"
+        description += "```\n"
+        description += "╔═══════════════════════════════╗\n"
+        description += "║   🔔 ÉVÉNEMENTS IMPORTANTS    ║\n"
+        description += "╚═══════════════════════════════╝\n"
+        description += "```\n"
         for p in planned:
             emoji_map = {
                 'greve': '🚨',
@@ -359,9 +389,14 @@ def format_weather_bulletin(tomorrow_info, forecasts):
     # Culture
     culture_section = ""
     if journee:
-        culture_section += f"🌍 **{journee}**\n"
+        culture_section += f"🌍 **{journee}**\n\n"
     if event:
-        culture_section += f"📜 **Il y a... {event.split(':')[0]}**\n{':'.join(event.split(':')[1:]).strip()}\n"
+        # Format : "1990 : Description" → "📜 Ce jour en 1990 : Description"
+        parts = event.split(':', 1)
+        if len(parts) == 2:
+            year = parts[0].strip()
+            desc = parts[1].strip()
+            culture_section += f"📜 **Ce jour en {year}**\n_{desc}_\n\n"
     
     if culture_section:
         if has_events:
@@ -369,9 +404,11 @@ def format_weather_bulletin(tomorrow_info, forecasts):
         description += culture_section + "\n"
     
     # Séparateur météo stylisé
-    description += "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-    description += "┃   🌤️ **MÉTÉO AU HAVRE**      ┃\n"
-    description += "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+    description += "```\n"
+    description += "╔═══════════════════════════════╗\n"
+    description += "║      🌤️ MÉTÉO AU HAVRE        ║\n"
+    description += "╚═══════════════════════════════╝\n"
+    description += "```\n"
     
     # Infos soleil et UV
     if 'sunrise' in forecasts and forecasts['sunrise']:
@@ -401,6 +438,33 @@ def format_weather_bulletin(tomorrow_info, forecasts):
         (20, "🌙", "Soirée")
     ]
     
+    # ALERTE MÉTÉO si conditions extrêmes
+    max_precip = max(f['precip'] for h, f in forecasts.items() if isinstance(h, int))
+    avg_wind = sum(f['wind'] for h, f in forecasts.items() if isinstance(h, int)) / 4
+    has_alert = False
+    
+    alert_messages = []
+    if max_precip > 85:
+        alert_messages.append("🌧️ **Fortes pluies**")
+        has_alert = True
+    if avg_wind > 40:
+        alert_messages.append("💨 **Vents violents**")
+        has_alert = True
+    
+    # Vérifier températures extrêmes
+    tomorrow_max = forecasts.get('tomorrow_max_temp')
+    tomorrow_min = forecasts.get('tomorrow_min_temp')
+    if tomorrow_max and tomorrow_max > 35:
+        alert_messages.append("🔥 **Forte chaleur**")
+        has_alert = True
+    elif tomorrow_min and tomorrow_min < 0:
+        alert_messages.append("❄️ **Gel attendu**")
+        has_alert = True
+    
+    if has_alert:
+        description += "⚠️ **ALERTE MÉTÉO** ⚠️\n"
+        description += " • ".join(alert_messages) + "\n\n"
+    
     for hour, emoji, label in hours_config:
         if hour in forecasts:
             f = forecasts[hour]
@@ -424,11 +488,45 @@ def format_weather_bulletin(tomorrow_info, forecasts):
     max_precip = max(f['precip'] for h, f in forecasts.items() if isinstance(h, int))
     avg_wind = sum(f['wind'] for h, f in forecasts.items() if isinstance(h, int)) / 4
     
-    description += "┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n"
+    description += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
     description += "**📊 RÉSUMÉ DE LA JOURNÉE**\n"
+    description += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
     description += f"• Température moyenne : **{avg_temp:.1f}°C**\n"
     description += f"• Probabilité de pluie max : **{max_precip:.0f}%**\n"
-    description += f"• Vent moyen : **{avg_wind:.0f} km/h**\n\n"
+    description += f"• Vent moyen : **{avg_wind:.0f} km/h**\n"
+    
+    # COMPARAISON AVEC HIER (Option B)
+    if 'today_avg_temp' in forecasts:
+        temp_diff = avg_temp - forecasts['today_avg_temp']
+        precip_diff = max_precip - forecasts['today_max_precip']
+        wind_diff = avg_wind - forecasts['today_avg_wind']
+        
+        description += "\n**📈 PAR RAPPORT À AUJOURD'HUI**\n"
+        
+        # Température
+        if abs(temp_diff) >= 1:
+            if temp_diff > 0:
+                description += f"• 🌡️ **+{temp_diff:.1f}°C** plus chaud\n"
+            else:
+                description += f"• 🌡️ **{temp_diff:.1f}°C** plus frais\n"
+        else:
+            description += "• 🌡️ Températures similaires\n"
+        
+        # Précipitations
+        if abs(precip_diff) >= 15:
+            if precip_diff > 0:
+                description += f"• 💧 **+{precip_diff:.0f}%** de risque de pluie\n"
+            else:
+                description += f"• ☀️ **{abs(precip_diff):.0f}%** moins de risque de pluie\n"
+        
+        # Vent
+        if abs(wind_diff) >= 5:
+            if wind_diff > 0:
+                description += f"• 💨 Vent plus fort (**+{wind_diff:.0f} km/h**)\n"
+            else:
+                description += f"• 💨 Vent plus calme (**{wind_diff:.0f} km/h**)\n"
+    
+    description += "\n"
     
     # Conseils personnalisés
     conseils = []
