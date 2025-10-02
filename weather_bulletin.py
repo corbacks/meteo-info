@@ -188,7 +188,7 @@ def get_historical_event(day, month):
 
         # --- JUILLET ---
         (14, 7): "1789 : Prise de la Bastille 🏰🔥",
-        (20, 7): "1969 : Neil Armstrong marche sur la Lune ",🌕👨‍🚀
+        (20, 7): "1969 : Neil Armstrong marche sur la Lune 🌕👨‍🚀",
         (25, 7): "1978 : Naissance de Louise Brown, premier bébé-éprouvette",
 
         # --- AOÛT ---
