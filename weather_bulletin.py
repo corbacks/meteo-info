@@ -370,11 +370,9 @@ def format_weather_bulletin(tomorrow_info, forecasts):
     has_events = False
     if planned:
         has_events = True
-        description += "```\n"
-        description += "╔═══════════════════════════════╗\n"
-        description += "║   🔔 ÉVÉNEMENTS IMPORTANTS    ║\n"
-        description += "╚═══════════════════════════════╝\n"
-        description += "```\n"
+        description += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        description += "           🔔 ÉVÉNEMENTS IMPORTANTS    ║\n"
+        description += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         for p in planned:
             emoji_map = {
                 'greve': '🚨',
@@ -404,9 +402,9 @@ def format_weather_bulletin(tomorrow_info, forecasts):
         description += culture_section + "\n"
     
     # Séparateur météo stylisé
-    description += "╔═══════════════════════════════╗\n"
-    description += "║      🌤️ MÉTÉO AU HAVRE        ║\n"
-    description += "╚═══════════════════════════════╝\n"
+    description += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+    description += "               🌤️ MÉTÉO AU HAVRE
+    description += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
     
     # Infos soleil et UV
     if 'sunrise' in forecasts and forecasts['sunrise']:
