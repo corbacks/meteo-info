@@ -371,7 +371,7 @@ def format_weather_bulletin(tomorrow_info, forecasts):
     if planned:
         has_events = True
         description += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        description += "           🔔 ÉVÉNEMENTS IMPORTANTS    ║\n"
+        description += "           🔔 ÉVÉNEMENTS IMPORTANTS                       \n"
         description += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         for p in planned:
             emoji_map = {
@@ -403,7 +403,7 @@ def format_weather_bulletin(tomorrow_info, forecasts):
     
     # Séparateur météo stylisé
     description += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-    description += "               🌤️ MÉTÉO AU HAVRE
+    description += "               🌤️ MÉTÉO AU HAVRE                          \n"
     description += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
     
     # Infos soleil et UV
