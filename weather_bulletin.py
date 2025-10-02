@@ -404,11 +404,9 @@ def format_weather_bulletin(tomorrow_info, forecasts):
         description += culture_section + "\n"
     
     # Séparateur météo stylisé
-    description += "```\n"
     description += "╔═══════════════════════════════╗\n"
     description += "║      🌤️ MÉTÉO AU HAVRE        ║\n"
     description += "╚═══════════════════════════════╝\n"
-    description += "```\n"
     
     # Infos soleil et UV
     if 'sunrise' in forecasts and forecasts['sunrise']:
