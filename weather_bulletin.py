@@ -84,7 +84,7 @@ def get_journee_mondiale(day, month):
         (26, 4): "Journée mondiale de la propriété intellectuelle 💡📄"
 
         # --- MAI ---
-        (1, 5): "Fête du Travail 🛠️👷",
+        (1, 5): """Fête du Travail 🛠️👷""",
         (3, 5): "Journée mondiale de la liberté de la presse 📰✒️",
         (8, 5): "Journée mondiale de la Croix-Rouge 🩸❤️",
         (15, 5): "Journée internationale des familles 👨‍👩‍👧‍👦",
