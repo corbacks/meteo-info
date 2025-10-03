@@ -1,221 +1,312 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-import re
+"""
+Scraper événements - Sources fiables
+- LiA Le Havre pour grèves transport
+- Actualités pour mouvements sociaux
+- Jours fériés officiels
+"""
+import requests
 import json
-import urllib.request
 from datetime import datetime, timedelta
+from pathlib import Path
+import re
 
-# Configuration
-WEBHOOK_URL = "https://discord.com/api/webhooks/1423592552010879047/NvllOZNsIIHNWj1MzhRVSf-xWHvJKsCtiguyaJcMmQcc5R2WQNcEjjkAY4Do17VXOLlT"
-ROLE_ID = "1423592204429164584"
-ICAL_URL = "https://hplanning.univ-lehavre.fr/Telechargements/ical/Edt_Gr1___L2_INFO.ics?version=2022.0.5.0&idICal=63D02C34E55C4FDF72F91012A61BEEEC&param=643d5b312e2e36325d2666683d3126663d3131313030"
+# PARAMÈTRE : Fenêtre de recherche en jours
+SEARCH_WINDOW_DAYS = 60  # Augmenté de 30 à 60 jours
 
-
-def download_calendar():
-    req = urllib.request.Request(ICAL_URL, headers={'User-Agent': 'Mozilla/5.0'})
-    with urllib.request.urlopen(req) as response:
-        return response.read().decode('utf-8')
-
-
-def parse_ical_datetime(dt_string):
-    try:
-        dt_clean = dt_string.strip().replace('Z', '')
-        if 'T' in dt_clean and len(dt_clean) >= 15:
-            date_part = dt_clean.split('T')[0]
-            year, month, day = int(date_part[:4]), int(date_part[4:6]), int(date_part[6:8])
-            return datetime(year, month, day).date()
-        elif len(dt_clean) == 8:
-            return datetime.strptime(dt_clean, "%Y%m%d").date()
-    except Exception as e:
-        print(f"⚠️ Erreur parsing datetime {dt_string}: {e}")
-    return None
-
-
-def parse_events(ical_content):
+def scrape_lia_disruptions():
+    """Scrape perturbations LiA"""
     events = []
-    today = datetime.now().date()
-    keywords = ['vacances', 'férié', 'holiday', 'congé', 'pont', 'vacation', 'ferie']
-
-    raw_lines = ical_content.split("\n")
-    lines, current = [], ""
-    for line in raw_lines:
-        if line.startswith(" ") or line.startswith("\t"):
-            current += line[1:]
-        else:
-            if current:
-                lines.append(current)
-            current = line
-    if current:
-        lines.append(current)
-
-    in_event, current_event = False, {}
-    for line in lines:
-        line = line.strip()
-        if line == "BEGIN:VEVENT":
-            in_event, current_event = True, {}
-        elif line == "END:VEVENT":
-            if in_event and "SUMMARY" in current_event and "DTSTART" in current_event:
-                summary = current_event["SUMMARY"].replace("\\n", " ").strip()
-                if any(k in summary.lower() for k in keywords):
-                    start = parse_ical_datetime(current_event["DTSTART"])
-                    end = parse_ical_datetime(current_event.get("DTEND", "")) or start
-                    if end and end > start:
-                        end -= timedelta(days=1)
-                    if start and (start >= today or (end and end >= today)):
-                        events.append({"summary": summary, "start": start, "end": end})
-            in_event = False
-        elif in_event and ":" in line:
-            k, v = line.split(":", 1)
-            current_event[k.split(";")[0]] = v
-
-    return sorted(events, key=lambda x: x["start"])
-
-
-def guess_vacation_name(summary, start, end):
-    s = summary.lower()
-    if "toussaint" in s or (start.month == 10 and end and end.month == 11):
-        return "Vacances de la Toussaint 🍂"
-    if "noel" in s or "noël" in s or (start.month == 12 or (end and end.month == 1)):
-        return "Vacances de Noël 🎅🎄"
-    if "hiver" in s or (start.month == 2 or (end and end.month == 3)):
-        return "Vacances d'Hiver ❄️"
-    if "printemps" in s or (start.month == 4 or (end and end.month == 5)):
-        return "Vacances de Printemps 🌸"
-    if "ascension" in s:
-        return "Pont de l'Ascension 🇫🇷"
-    if "ete" in s or "été" in s or start.month >= 7:
-        return "Vacances d'Été 🌞"
-    if "ferie" in s or "férié" in s or "holiday" in s or "congé" in s:
-        return "Jour Férié 🇫🇷"
-    return summary.strip()
-
-
-def merge_consecutive_events(events):
-    merged = []
-    for evt in events:
-        name = guess_vacation_name(evt['summary'], evt['start'], evt['end'])
-        if merged and guess_vacation_name(merged[-1]['summary'], merged[-1]['start'], merged[-1]['end']) == name:
-            if evt['start'] <= merged[-1]['end'] + timedelta(days=1):
-                merged[-1]['end'] = max(merged[-1]['end'], evt['end'])
-                continue
-        merged.append(evt)
-    return merged
-
-
-def format_countdown(days_until):
-    if days_until == 0:
-        return "🎉 **C'EST AUJOURD'HUI !** 🎉"
-    elif days_until == 1:
-        return "⏰ **DEMAIN !** ⏰"
-    elif days_until <= 7:
-        return f"🔥 **J-{days_until}** 🔥"
-    elif days_until <= 30:
-        return f"⚡ **J-{days_until}** ⚡"
-    else:
-        return f"📅 **J-{days_until}** 📅"
-
-
-def format_date_range(event):
-    months = ['', 'janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre']
-    start, end = event['start'], event['end']
-    duration = (end - start).days + 1 if end else 1
-    pont_text = " (Jour Férié + Pont)" if 2 <= duration <= 3 else ""
-    if end and end != start:
-        duration_text = f"{duration} jours"
-        return f"📆 Du {start.day} {months[start.month]} au {end.day} {months[end.month]} {end.year}\n🕐 Durée : {duration_text}{pont_text}"
-    else:
-        return f"📆 Le {start.day} {months[start.month]} {start.year}"
-
-
-def create_progress_bar(days_until, total_days=90):
-    if days_until > total_days:
-        days_until = total_days
-    progress = 1 - (days_until / total_days)
-    filled = int(progress * 10)
-    empty = 10 - filled
-    percentage = int(progress * 100)
-    block = "🟩" if percentage > 75 else "🟧" if percentage > 25 else "🟥"
-    bar = block * filled + "⬜" * empty
-    return f"{bar} {percentage}%\n({days_until} jours restants sur {total_days})"
-
-
-def create_embed(events):
-    today = datetime.now().date()
-    if not events:
-        return {
-            "username": "📚 HyperPlanning Assistant",
-            "content": f"<@&{ROLE_ID}>",
-            "embeds": [{
-                "title": "🔍 Aucune vacance trouvée",
-                "description": "Aucune vacances prévues pour l'instant.\n\nTiens bon 💪",
-                "color": 0x95A5A6
-            }]
-        }
-
-    next_event = events[0]
-    days_until = (next_event['start'] - today).days
-    event_name = guess_vacation_name(next_event['summary'], next_event['start'], next_event['end'])
-
-    description_parts = [
-        format_countdown(days_until), "",
-        f"🏖️ **{event_name}**", "",
-        format_date_range(next_event), "",
-        "✨ Garde le rythme, ça arrive vite ! ✨", "",
-        "**Progression :**",
-        create_progress_bar(days_until)
-    ]
-    description = "\n".join(description_parts)
-
-    embed = {
-        "title": "📅 Prochaines Vacances 📅",
-        "description": description,
-        "color": 0x3498DB,
-        "footer": {"text": "Université Le Havre Normandie"},
-        "timestamp": datetime.now().isoformat()
-    }
-
-    if len(events) > 1:
-        upcoming = []
-        for i, evt in enumerate(events[1:4], 1):
-            evt_name = guess_vacation_name(evt['summary'], evt['start'], evt['end'])
-            months = ['', 'janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre']
-            date_text = f"📆 Du {evt['start'].day} {months[evt['start'].month]} au {evt['end'].day} {months[evt['end'].month]} {evt['end'].year}"
-            duration = (evt['end'] - evt['start']).days + 1 if evt['end'] else 1
-            duration_text = f"{duration} jours"
-            if 2 <= duration <= 3:
-                duration_text += " (Jour Férié + Pont)"
-            emoji = '📌' if i == 1 else '📍' if i == 2 else '📎'
-            upcoming.append(f"{emoji} {evt_name}\n{date_text}\n🕐 Durée : {duration_text}\n")
-        embed['fields'] = [{"name": "🗓️ À suivre :", "value": "\n".join(upcoming), "inline": False}]
-
-    return {
-        "username": "📚 HyperPlanning Assistant",
-        "content": f"<@&{ROLE_ID}>",
-        "embeds": [embed]
-    }
-
-
-def send_to_discord(payload):
-    req = urllib.request.Request(WEBHOOK_URL,
-                                 data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),
-                                 headers={'Content-Type': 'application/json'})
+    
     try:
-        with urllib.request.urlopen(req) as response:
-            print(f"✅ Envoyé (Status: {response.status})")
-            return True
+        url = "https://www.transports-lia.fr/fr/infos-trafic/17/Disruption"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+        
+        print("  → Requête vers LiA...")
+        resp = requests.get(url, headers=headers, timeout=15)
+        
+        if resp.status_code == 200:
+            print(f"  → Réponse LiA : {len(resp.text)} caractères")
+            
+            try:
+                from bs4 import BeautifulSoup
+                soup = BeautifulSoup(resp.text, 'html.parser')
+                
+                # Recherche de perturbations dans le contenu
+                text_content = soup.get_text().lower()
+                
+                # Mots-clés de perturbation
+                keywords = ['grève', 'greve', 'perturbation', 'interruption', 'travaux', 'modification']
+                found_keywords = [kw for kw in keywords if kw in text_content]
+                
+                if found_keywords:
+                    print(f"  → Mots-clés trouvés : {', '.join(found_keywords)}")
+                    
+                    # Recherche de dates
+                    months_map = {
+                        'janvier': 1, 'février': 2, 'fevrier': 2, 'mars': 3, 'avril': 4,
+                        'mai': 5, 'juin': 6, 'juillet': 7, 'août': 8, 'aout': 8,
+                        'septembre': 9, 'octobre': 10, 'novembre': 11, 'décembre': 12, 'decembre': 12
+                    }
+                    
+                    # Pattern: "du X au Y mois" ou "le X mois"
+                    date_patterns = re.findall(
+                        r'(?:du |le |à partir du )?(\d{1,2})\s+(janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|novembre|décembre|decembre)',
+                        text_content
+                    )
+                    
+                    print(f"  → Dates trouvées : {len(date_patterns)}")
+                    
+                    for day, month in date_patterns[:5]:
+                        try:
+                            month_num = months_map.get(month)
+                            if month_num:
+                                year = datetime.now().year
+                                if month_num < datetime.now().month:
+                                    year += 1
+                                
+                                event_date = datetime(year, month_num, int(day))
+                                
+                                if datetime.now() <= event_date <= datetime.now() + timedelta(days=SEARCH_WINDOW_DAYS):
+                                    events.append({
+                                        'date': event_date.strftime('%Y-%m-%d'),
+                                        'type': 'greve',
+                                        'title': 'Perturbation réseau LiA',
+                                        'description': f'Perturbation annoncée sur le réseau LiA - Consultez transports-lia.fr',
+                                        'source': 'LiA Transports'
+                                    })
+                                    print(f"  → Ajouté : {event_date.strftime('%d/%m/%Y')}")
+                        except Exception as e:
+                            print(f"  → Erreur parsing date : {e}")
+                    
+                    # Si aucune date trouvée mais perturbation mentionnée
+                    if not date_patterns and found_keywords:
+                        print("  → Aucune date précise, ajout événement générique")
+                        # Supposer que c'est pour aujourd'hui/demain
+                        for offset in [0, 1]:
+                            event_date = datetime.now() + timedelta(days=offset)
+                            events.append({
+                                'date': event_date.strftime('%Y-%m-%d'),
+                                'type': 'greve',
+                                'title': 'Perturbation réseau LiA',
+                                'description': 'Perturbation en cours ou à venir - Consultez transports-lia.fr',
+                                'source': 'LiA Transports'
+                            })
+                else:
+                    print("  → Aucune perturbation détectée")
+                    
+            except ImportError:
+                print("  ⚠️ BeautifulSoup non disponible, analyse basique")
+                # Fallback sans BeautifulSoup
+                if 'grève' in resp.text.lower() or 'perturbation' in resp.text.lower():
+                    event_date = datetime.now() + timedelta(days=1)
+                    events.append({
+                        'date': event_date.strftime('%Y-%m-%d'),
+                        'type': 'greve',
+                        'title': 'Perturbation réseau LiA',
+                        'description': 'Vérifiez les infos trafic sur transports-lia.fr',
+                        'source': 'LiA Transports'
+                    })
+        else:
+            print(f"  ⚠️ Erreur HTTP {resp.status_code}")
+    
     except Exception as e:
-        print(f"❌ Erreur : {e}")
-        return False
+        print(f"  ⚠️ Erreur LiA: {e}")
+    
+    return events
 
+def scrape_mouvements_sociaux():
+    """Scrape actualités pour mouvements sociaux"""
+    events = []
+    
+    try:
+        rss_sources = [
+            ('France TV Info', 'https://www.francetvinfo.fr/titres.rss'),
+            ('Le Monde', 'https://www.lemonde.fr/rss/une.xml')
+        ]
+        
+        keywords = ['grève', 'greve', 'mouvement social', 'manifestation', 'préavis']
+        
+        months_map = {
+            'janvier': 1, 'février': 2, 'fevrier': 2, 'mars': 3, 'avril': 4,
+            'mai': 5, 'juin': 6, 'juillet': 7, 'août': 8, 'aout': 8,
+            'septembre': 9, 'octobre': 10, 'novembre': 11, 'décembre': 12, 'decembre': 12
+        }
+        
+        for source_name, rss_url in rss_sources:
+            try:
+                print(f"  → Analyse {source_name}...")
+                resp = requests.get(rss_url, timeout=10)
+                if resp.status_code == 200:
+                    content = resp.text.lower()
+                    
+                    found_keywords = [kw for kw in keywords if kw in content]
+                    if found_keywords:
+                        print(f"    ✓ Mots-clés trouvés : {', '.join(found_keywords[:2])}")
+                    
+                    for keyword in keywords:
+                        if keyword in content:
+                            # Extraire dates
+                            date_patterns = re.findall(
+                                r'(\d{1,2})\s+(janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|novembre|décembre|decembre)',
+                                content
+                            )
+                            
+                            for day, month in date_patterns[:2]:
+                                try:
+                                    month_num = months_map.get(month)
+                                    if month_num:
+                                        year = datetime.now().year
+                                        if month_num < datetime.now().month:
+                                            year += 1
+                                        
+                                        event_date = datetime(year, month_num, int(day))
+                                        
+                                        if datetime.now() <= event_date <= datetime.now() + timedelta(days=SEARCH_WINDOW_DAYS):
+                                            events.append({
+                                                'date': event_date.strftime('%Y-%m-%d'),
+                                                'type': 'greve',
+                                                'title': 'Mouvement social annoncé',
+                                                'description': f'Mouvement social mentionné dans l\'actualité ({source_name})',
+                                                'source': source_name
+                                            })
+                                            print(f"    → Ajouté : {event_date.strftime('%d/%m/%Y')}")
+                                except Exception as e:
+                                    pass
+                            break
+                else:
+                    print(f"    ⚠️ Erreur HTTP {resp.status_code}")
+            except Exception as e:
+                print(f"    ⚠️ Erreur : {e}")
+                
+    except Exception as e:
+        print(f"  ⚠️ Erreur actualités: {e}")
+    
+    return events
+
+def get_jours_feries():
+    """Jours fériés français officiels"""
+    events = []
+    current_year = datetime.now().year
+    
+    jours_feries_fixes = [
+        (1, 1, "Jour de l'an"),
+        (5, 1, "Fête du Travail"),
+        (5, 8, "Victoire 1945"),
+        (7, 14, "Fête Nationale"),
+        (8, 15, "Assomption"),
+        (11, 1, "Toussaint"),
+        (11, 11, "Armistice 1918"),
+        (12, 25, "Noël")
+    ]
+    
+    for year in [current_year, current_year + 1]:
+        for month, day, nom in jours_feries_fixes:
+            date = datetime(year, month, day)
+            if datetime.now() <= date <= datetime.now() + timedelta(days=SEARCH_WINDOW_DAYS):
+                events.append({
+                    'date': date.strftime('%Y-%m-%d'),
+                    'type': 'ferie',
+                    'title': nom,
+                    'description': 'Jour férié - Services publics fermés',
+                    'source': 'Calendrier officiel'
+                })
+    
+    # Jours mobiles
+    paques_dates = {
+        2024: datetime(2024, 3, 31),
+        2025: datetime(2025, 4, 20),
+        2026: datetime(2026, 4, 5),
+        2027: datetime(2027, 3, 28)
+    }
+    
+    for year, paques in paques_dates.items():
+        lundi_paques = paques + timedelta(days=1)
+        ascension = paques + timedelta(days=39)
+        pentecote = paques + timedelta(days=50)
+        
+        for date, nom in [(lundi_paques, "Lundi de Pâques"), 
+                          (ascension, "Ascension"), 
+                          (pentecote, "Lundi de Pentecôte")]:
+            if datetime.now() <= date <= datetime.now() + timedelta(days=SEARCH_WINDOW_DAYS):
+                events.append({
+                    'date': date.strftime('%Y-%m-%d'),
+                    'type': 'ferie',
+                    'title': nom,
+                    'description': 'Jour férié',
+                    'source': 'Calendrier officiel'
+                })
+    
+    return events
+
+def merge_and_deduplicate(events):
+    """Fusionne et déduplique"""
+    seen = set()
+    unique = []
+    
+    for event in events:
+        key = (event['date'], event['title'])
+        if key not in seen:
+            seen.add(key)
+            unique.append(event)
+    
+    unique.sort(key=lambda x: x['date'])
+    return unique
+
+def save_events(events):
+    """Sauvegarde dans planned_events.json"""
+    output = {
+        'last_update': datetime.now().isoformat(),
+        'search_window_days': SEARCH_WINDOW_DAYS,
+        'events': events
+    }
+    
+    with open('planned_events.json', 'w', encoding='utf-8') as f:
+        json.dump(output, f, indent=2, ensure_ascii=False)
+    
+    print(f"\n✅ Sauvegardé {len(events)} événements")
 
 def main():
-    ical_content = download_calendar()
-    events = parse_events(ical_content)
-    events = merge_consecutive_events(events)
-    payload = create_embed(events)
-    send_to_discord(payload)
-
+    print("="*60)
+    print("SCRAPER ÉVÉNEMENTS")
+    print(f"Exécution: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    print(f"Fenêtre de recherche : {SEARCH_WINDOW_DAYS} jours")
+    print("="*60)
+    
+    all_events = []
+    
+    print("\n📅 Jours fériés...")
+    feries = get_jours_feries()
+    all_events.extend(feries)
+    print(f"  ✓ {len(feries)} jours fériés trouvés")
+    for f in feries:
+        print(f"    • {f['date']} - {f['title']}")
+    
+    print("\n🚌 Perturbations LiA...")
+    lia = scrape_lia_disruptions()
+    all_events.extend(lia)
+    print(f"  ✓ {len(lia)} perturbations LiA")
+    
+    print("\n📰 Mouvements sociaux...")
+    greves = scrape_mouvements_sociaux()
+    all_events.extend(greves)
+    print(f"  ✓ {len(greves)} mouvements sociaux")
+    
+    unique = merge_and_deduplicate(all_events)
+    save_events(unique)
+    
+    print(f"\n{'='*60}")
+    print(f"✅ TOTAL: {len(unique)} événements dans les {SEARCH_WINDOW_DAYS} prochains jours")
+    print(f"{'='*60}")
+    
+    if unique:
+        print("\n📋 Liste complète des événements:")
+        for event in unique:
+            print(f"  • {event['date']} - {event['title']} ({event['source']})")
+    else:
+        print("\n⚠️ Aucun événement trouvé")
 
 if __name__ == "__main__":
     main()
