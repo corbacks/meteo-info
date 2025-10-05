@@ -1,13 +1,6 @@
 {
-  "last_update": "2025-10-05T06:42:34.263414",
+  "last_update": "2025-10-05T14:29:56.601350",
   "events": [
-    {
-      "date": "2025-10-07",
-      "type": "greve",
-      "title": "Mouvement social annoncé",
-      "description": "Mouvement social mentionné dans l'actualité",
-      "source": "Actualités"
-    },
     {
       "date": "2025-11-01",
       "type": "ferie",
