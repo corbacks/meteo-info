@@ -1,6 +1,20 @@
 {
-  "last_update": "2025-10-05T14:29:56.601350",
+  "last_update": "2025-10-06T06:50:34.743951",
   "events": [
+    {
+      "date": "2025-10-06",
+      "type": "greve",
+      "title": "Perturbation réseau LiA",
+      "description": "Perturbation en cours ou à venir - Consultez transports-lia.fr",
+      "source": "LiA Transports"
+    },
+    {
+      "date": "2025-10-07",
+      "type": "greve",
+      "title": "Perturbation réseau LiA",
+      "description": "Perturbation en cours ou à venir - Consultez transports-lia.fr",
+      "source": "LiA Transports"
+    },
     {
       "date": "2025-11-01",
       "type": "ferie",
