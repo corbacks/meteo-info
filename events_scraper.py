@@ -336,7 +336,7 @@ def main():
     print(f"  ✓ {len(lia)} perturbations LiA")
     
     print("\n📰 Mouvements sociaux...")
-    greves = scrape_mouvements_sociaux()
+    greves = scrape_greves()
     all_events.extend(greves)
     print(f"  ✓ {len(greves)} mouvements sociaux")
     
@@ -349,6 +349,7 @@ def main():
         print("\n📋 Prochains événements:")
         for event in unique[:5]:
             print(f"  • {event['date']} - {event['title']}")
+
 
 if __name__ == "__main__":
     main()
