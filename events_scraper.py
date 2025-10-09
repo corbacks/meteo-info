@@ -11,93 +11,107 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import re
 
-def scrape_lia_disruptions():
-    """Scrape perturbations LiA"""
+def scrape_lia_disruptions(debug=True):
+    """Scrape les perturbations LiA pertinentes (tramway ou grève) avec logs détaillés"""
     events = []
-    
+
     try:
+        import requests
+        from bs4 import BeautifulSoup
+        import re
+        from datetime import datetime, timedelta
+
         url = "https://www.transports-lia.fr/fr/infos-trafic/17/Disruption"
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        }
-        
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+
+        if debug:
+            print("🚏 [LiA] Téléchargement de la page des perturbations...")
+
         resp = requests.get(url, headers=headers, timeout=15)
-        
-        if resp.status_code == 200:
-            try:
-                from bs4 import BeautifulSoup
-                soup = BeautifulSoup(resp.text, 'html.parser')
-                
-                # Recherche de perturbations dans le contenu
-                text_content = soup.get_text().lower()
-                
-                # Mots-clés de perturbation
-                keywords = ['grève', 'greve', 'perturbation', 'interruption', 'travaux']
-                
-                if any(kw in text_content for kw in keywords):
-                    # Recherche de dates
-                    months_map = {
-                        'janvier': 1, 'février': 2, 'fevrier': 2, 'mars': 3, 'avril': 4,
-                        'mai': 5, 'juin': 6, 'juillet': 7, 'août': 8, 'aout': 8,
-                        'septembre': 9, 'octobre': 10, 'novembre': 11, 'décembre': 12, 'decembre': 12
+        if resp.status_code != 200:
+            print(f"⚠️ [LiA] Erreur HTTP {resp.status_code}")
+            return events
+
+        soup = BeautifulSoup(resp.text, "html.parser")
+
+        # On récupère les articles ou blocs de perturbations
+        disruptions = soup.find_all("article") or soup.find_all("div", class_="disruption")
+        if debug:
+            print(f"📋 [LiA] {len(disruptions)} perturbation(s) trouvée(s) sur la page")
+
+        months_map = {
+            'janvier': 1, 'février': 2, 'fevrier': 2, 'mars': 3, 'avril': 4,
+            'mai': 5, 'juin': 6, 'juillet': 7, 'août': 8, 'aout': 8,
+            'septembre': 9, 'octobre': 10, 'novembre': 11, 'décembre': 12, 'decembre': 12
+        }
+
+        kept = 0
+        for i, item in enumerate(disruptions, 1):
+            title = item.get_text(strip=True).lower()
+            text = item.get_text(" ", strip=True).lower()
+
+            # Vérifie si c’est pertinent
+            if not re.search(r'\b(tram|tramway|gr[eè]ve)\b', title):
+                if debug:
+                    print(f"❌ Ignoré #{i} (non pertinent) → {title[:60]}...")
+                continue
+
+            # Extraction d’un titre lisible
+            display_title = item.find("h3").get_text(strip=True) if item.find("h3") else title.title()
+
+            # Recherche de dates dans le texte
+            date_patterns = re.findall(
+                r'(?:du |le |à partir du )?(\d{1,2})\s+'
+                r'(janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|novembre|décembre|decembre)',
+                text
+            )
+
+            # Brève description (30 premiers mots)
+            description = " ".join(text.split()[:30]) + "..."
+            event_dates = []
+
+            if date_patterns:
+                for day, month in date_patterns[:3]:
+                    try:
+                        month_num = months_map.get(month)
+                        year = datetime.now().year
+                        if month_num and month_num < datetime.now().month:
+                            year += 1
+                        d = datetime(year, month_num, int(day))
+                        event_dates.append(d)
+                    except Exception as e:
+                        if debug:
+                            print(f"⚠️ Erreur parsing date LiA : {e}")
+
+            # Si aucune date trouvée, on suppose aujourd’hui / demain
+            if not event_dates:
+                event_dates = [datetime.now(), datetime.now() + timedelta(days=1)]
+
+            for d in event_dates:
+                if datetime.now() - timedelta(days=1) <= d <= datetime.now() + timedelta(days=14):
+                    event = {
+                        "date": d.strftime("%Y-%m-%d"),
+                        "type": "greve" if "grève" in text or "greve" in text else "transport",
+                        "title": display_title,
+                        "description": description,
+                        "source": "LiA Transports"
                     }
-                    
-                    # Pattern: "du X au Y mois" ou "le X mois"
-                    date_patterns = re.findall(
-                        r'(?:du |le |à partir du )?(\d{1,2})\s+(janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|novembre|décembre|decembre)',
-                        text_content
-                    )
-                    
-                    for day, month in date_patterns[:3]:
-                        try:
-                            month_num = months_map.get(month)
-                            if month_num:
-                                year = datetime.now().year
-                                if month_num < datetime.now().month:
-                                    year += 1
-                                
-                                event_date = datetime(year, month_num, int(day))
-                                
-                                if datetime.now() <= event_date <= datetime.now() + timedelta(days=14):
-                                    events.append({
-                                        'date': event_date.strftime('%Y-%m-%d'),
-                                        'type': 'greve',
-                                        'title': 'Perturbation réseau LiA',
-                                        'description': f'Perturbation annoncée sur le réseau LiA - Consultez transports-lia.fr',
-                                        'source': 'LiA Transports'
-                                    })
-                        except:
-                            pass
-                    
-                    # Si aucune date trouvée mais perturbation mentionnée
-                    if not date_patterns and any(kw in text_content for kw in keywords):
-                        # Supposer que c'est pour aujourd'hui/demain
-                        for offset in [0, 1]:
-                            event_date = datetime.now() + timedelta(days=offset)
-                            events.append({
-                                'date': event_date.strftime('%Y-%m-%d'),
-                                'type': 'greve',
-                                'title': 'Perturbation réseau LiA',
-                                'description': 'Perturbation en cours ou à venir - Consultez transports-lia.fr',
-                                'source': 'LiA Transports'
-                            })
-            except ImportError:
-                print("⚠️ BeautifulSoup non disponible, analyse basique")
-                # Fallback sans BeautifulSoup
-                if 'grève' in resp.text.lower() or 'perturbation' in resp.text.lower():
-                    event_date = datetime.now() + timedelta(days=1)
-                    events.append({
-                        'date': event_date.strftime('%Y-%m-%d'),
-                        'type': 'greve',
-                        'title': 'Perturbation réseau LiA',
-                        'description': 'Vérifiez les infos trafic sur transports-lia.fr',
-                        'source': 'LiA Transports'
-                    })
-    
+                    events.append(event)
+                    kept += 1
+                    if debug:
+                        print(f"✅ Gardé #{i}: {display_title} → {d.strftime('%d %b %Y')} ({event['type']})")
+                else:
+                    if debug:
+                        print(f"⏩ Ignoré #{i} (date trop lointaine) → {display_title}")
+
+        if debug:
+            print(f"✅ [LiA] {kept} perturbation(s) pertinente(s) gardée(s) sur {len(disruptions)}")
+
     except Exception as e:
-        print(f"⚠️ Erreur LiA: {e}")
-    
+        print(f"⚠️ [LiA] Erreur lors du scraping : {e}")
+
     return events
+
 
 def scrape_mouvements_sociaux():
     """Scrape actualités pour mouvements sociaux"""
