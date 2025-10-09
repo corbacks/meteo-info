@@ -116,7 +116,7 @@ def scrape_lia_disruptions(debug=True):
 def scrape_greves(debug=True):
     """
     Scrape les infos de grèves (France + Le Havre) depuis plusieurs sources médias et open data.
-    Donne des événements datés, sourcés et pertinents.
+    Ne garde que les grèves futures, pertinentes et sourcées.
     """
     import requests
     from bs4 import BeautifulSoup
@@ -127,11 +127,9 @@ def scrape_greves(debug=True):
     today = datetime.now().date()
 
     sources = [
-        # Actualités nationales
         ("https://www.service-public.fr/particuliers/actualites", "Service Public (officiel)"),
         ("https://www.francetvinfo.fr/economie/transports/sncf/", "France Info SNCF"),
         ("https://www.francetvinfo.fr/societe/greve/", "France Info Grèves"),
-        # Locales
         ("https://actu.fr/normandie/le-havre/", "Actu.fr Le Havre"),
     ]
 
@@ -148,10 +146,11 @@ def scrape_greves(debug=True):
         try:
             resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
             if resp.status_code != 200:
+                if debug:
+                    print(f"⚠️ [{label}] Erreur HTTP {resp.status_code}")
                 continue
-            soup = BeautifulSoup(resp.text, "html.parser")
 
-            # On cherche tous les liens contenant "grève" ou "mouvement social"
+            soup = BeautifulSoup(resp.text, "html.parser")
             links = soup.find_all("a", href=True)
             for a in links:
                 text = a.get_text(" ", strip=True)
@@ -159,23 +158,24 @@ def scrape_greves(debug=True):
                     continue
                 lower = text.lower()
 
-                # 🎯 Filtrage : garder seulement les articles pertinents
-                if not re.search(r"\b(gr[eè]ve|mouvement social|perturbation|sncf|lia|transports)\b", lower):
+                # 🎯 Filtrage initial
+                if not re.search(r"\b(gr[eè]ve|mouvement social|mobilisation|perturbation|sncf|lia|transports?)\b", lower):
                     continue
 
-                # Déterminer le lien absolu
+                # ❌ Ignore les bilans ("bilan", "retard", "incendie", "manifesté", etc.)
+                if re.search(r"\b(bilan|retard|manifesté|manifestants?|incendie|retards?|perturbé|passagers|heures de retard)\b", lower):
+                    continue
+
+                # ⚙️ Filtrage géographique négatif
+                if re.search(r"\b(toulouse|bordeaux|lyon|marseille|nice|lille|strasbourg|nantes|montpellier|rennes)\b", lower):
+                    if not re.search(r"\b(le\s*havre|normandie|national|toute la france|sncf|ratp)\b", lower):
+                        continue
+
                 href = a["href"]
                 if not href.startswith("http"):
                     href = url.rstrip("/") + "/" + href.lstrip("/")
 
-                # Extraire les dates dans le titre ou la page
-                date_matches = re.findall(
-                    r"(\d{1,2})\s+(janvier|février|fevrier|mars|avril|mai|juin|"
-                    r"juillet|ao[uû]t|septembre|octobre|novembre|d[ée]cembre)",
-                    text.lower()
-                )
-
-                # Charger la page pour plus de contexte (petit scraping ciblé)
+                # 🔍 On tente d'extraire plus d'infos dans l'article
                 sub_desc = ""
                 try:
                     sub_resp = requests.get(href, headers={"User-Agent": "Mozilla/5.0"}, timeout=8)
@@ -186,55 +186,76 @@ def scrape_greves(debug=True):
                 except:
                     pass
 
-                # Déterminer la gravité
-                importance = 1
-                if re.search(r"\bnationale|toute la france|sncf|transilien|r[aâ]t[pf]|enseignants?\b", sub_desc):
-                    importance = 3
-                elif re.search(r"le\s*havre|lia|transports urbains|universit", sub_desc):
-                    importance = 2
+                # 🧠 Score de pertinence
+                relevance = 0
+                if re.search(r"\b(le\s*havre|normandie|lia|universit)\b", lower + sub_desc.lower()):
+                    relevance += 2
+                if re.search(r"\bnational|sncf|ratp|éducation|enseignants?\b", lower + sub_desc.lower()):
+                    relevance += 1
+                if relevance == 0:
+                    continue
 
-                # Extraire date(s)
-                if date_matches:
-                    for day, month in date_matches[:3]:
-                        try:
-                            m = months_map.get(month.replace("û", "u"))
-                            year = datetime.now().year
-                            if m and m < datetime.now().month:
-                                year += 1
-                            d = datetime(year, m, int(day)).date()
-                            if d >= today - timedelta(days=1):
-                                events.append({
-                                    "date": d.strftime("%Y-%m-%d"),
-                                    "type": "greve",
-                                    "title": text.strip().capitalize(),
-                                    "description": sub_desc[:300] + "...",
-                                    "source": label,
-                                    "importance": importance,
-                                    "link": href
-                                })
-                        except:
-                            pass
-                else:
-                    # Si pas de date trouvée, on garde les articles très récents ou importants
-                    if importance >= 2:
-                        events.append({
-                            "date": today.strftime("%Y-%m-%d"),
-                            "type": "greve",
-                            "title": text.strip().capitalize(),
-                            "description": sub_desc[:300] + "...",
-                            "source": label,
-                            "importance": importance,
-                            "link": href
-                        })
+                # 🔎 Extraction de dates (futures uniquement)
+                date_matches = re.findall(
+                    r"(?:le|du|à partir du)?\s*(\d{1,2})\s+(janvier|février|fevrier|mars|avril|mai|juin|"
+                    r"juillet|ao[uû]t|septembre|octobre|novembre|d[ée]cembre)\b",
+                    (lower + sub_desc.lower())
+                )
+
+                future_dates = []
+                for day, month in date_matches[:3]:
+                    try:
+                        m = months_map.get(month.replace("û", "u"))
+                        year = today.year
+                        if m and m < today.month:
+                            year += 1
+                        d = datetime(year, m, int(day)).date()
+                        # 🔥 On garde uniquement si la date est dans le futur (dans les 60 prochains jours)
+                        if today <= d <= today + timedelta(days=60):
+                            future_dates.append(d)
+                    except Exception as e:
+                        if debug:
+                            print(f"⚠️ Erreur parsing date dans {label}: {e}")
+
+                # 🧹 Si pas de date future, on ignore
+                if not future_dates:
+                    continue
+
+                # ✅ Création d'événements
+                for d in future_dates:
+                    event = {
+                        "date": d.strftime("%Y-%m-%d"),
+                        "type": "greve",
+                        "title": text.strip().capitalize(),
+                        "description": (sub_desc[:300] + "...") if sub_desc else "Annonce de grève prochaine.",
+                        "source": label,
+                        "importance": relevance,
+                        "link": href
+                    }
+                    events.append(event)
+                    if debug:
+                        print(f"✅ [Grève] {label} → {event['title']} ({event['date']})")
 
         except Exception as e:
             if debug:
                 print(f"⚠️ Erreur scraping {label}: {e}")
 
-    if debug:
-        print(f"✅ [Grèves] {len(events)} événement(s) détecté(s) au total")
+    # 🔧 Nettoyage final : supprimer doublons + trier par date
+    seen = set()
+    filtered = []
+    for ev in events:
+        key = (ev['date'], ev['title'])
+        if key not in seen:
+            seen.add(key)
+            filtered.append(ev)
 
-    return events
+    filtered = [e for e in filtered if datetime.strptime(e['date'], "%Y-%m-%d").year == today.year]
+    filtered.sort(key=lambda x: x['date'])
+
+    if debug:
+        print(f"✅ [Grèves] {len(filtered)} grève(s) future(s) pertinente(s) conservée(s).")
+
+    return filtered
 
 
 def get_jours_feries():
