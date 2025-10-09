@@ -1,5 +1,5 @@
 {
-  "last_update": "2025-10-09T06:51:42.161903",
+  "last_update": "2025-10-09T14:48:05.840946",
   "events": [
     {
       "date": "2025-10-09",
@@ -14,13 +14,6 @@
       "title": "Perturbation réseau LiA",
       "description": "Perturbation en cours ou à venir - Consultez transports-lia.fr",
       "source": "LiA Transports"
-    },
-    {
-      "date": "2025-10-13",
-      "type": "greve",
-      "title": "Mouvement social annoncé",
-      "description": "Mouvement social mentionné dans l'actualité",
-      "source": "Actualités"
     },
     {
       "date": "2025-11-01",
