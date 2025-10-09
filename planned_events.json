@@ -1,19 +1,14 @@
 {
-  "last_update": "2025-10-09T19:00:29.108155",
+  "last_update": "2025-10-09T19:12:41.220885",
   "events": [
     {
-      "date": "2025-10-13",
+      "date": "2025-10-09",
       "type": "greve",
-      "title": "Mouvement social annoncé",
-      "description": "Mouvement social mentionné dans l'actualité",
-      "source": "Actualités"
-    },
-    {
-      "date": "2025-10-16",
-      "type": "greve",
-      "title": "Mouvement social annoncé",
-      "description": "Mouvement social mentionné dans l'actualité",
-      "source": "Actualités"
+      "title": "Le principal syndicat de contrôleurs aériens suspend son préavis de grève des 7, 8 et 9 octobre le sncta précise que sa décision fait aussi \"suite aux annonces du premier ministre renvoyant le projet de loi de finances aux travaux parlementaires\".",
+      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
+      "source": "France Info Grèves",
+      "importance": 1,
+      "link": "https://www.francetvinfo.fr/societe/greve/economie/greve/greve-des-transports/le-principal-syndicat-de-controleurs-aeriens-suspend-son-preavis-de-greve-des-7-8-et-9-octobre_7531486.html"
     },
     {
       "date": "2025-11-01",
@@ -21,6 +16,105 @@
       "title": "Toussaint",
       "description": "Jour férié - Services publics fermés",
       "source": "Calendrier officiel"
+    },
+    {
+      "date": "2025-12-13",
+      "type": "greve",
+      "title": "Trains de nuit : vers une fin des lignes vers berlin et vienne ? afin de faire des économies, l'état réfléchirait à supprimer sa subvention à la sncf, ce qui pousserait la compagnie à arrêter de faire circuler ses train de nuit. une fin de service est possible à partir du 13 décembre.",
+      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
+      "source": "France Info SNCF",
+      "importance": 1,
+      "link": "https://www.francetvinfo.fr/economie/transports/sncf/economie/transports/sncf/trains-de-nuit-vers-une-fin-des-lignes-vers-berlin-et-vienne_7517335.html"
+    },
+    {
+      "date": "2026-09-14",
+      "type": "greve",
+      "title": "Sncf : huit heures de retard sur un train faisant le trajet de toulouse à paris jusqu'à huit heures de retard pour les passagers d'un train entre toulouse et paris, dimanche 14 septembre. la raison : quatre des départs de feu ont été constatés sur des câbles, certainement volontaires.",
+      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
+      "source": "France Info SNCF",
+      "importance": 1,
+      "link": "https://www.francetvinfo.fr/economie/transports/sncf/replay-jt/france-2/8-heures/sncf-huit-heures-de-retard-sur-un-train-faisant-le-trajet-de-toulouse-a-paris_7493140.html"
+    },
+    {
+      "date": "2026-09-14",
+      "type": "greve",
+      "title": "Sncf : l’incendie de câbles de signalisation provoque d'importants retards en gare de bordeaux dimanche 14 septembre, le trafic ferroviaire a été extrêmement perturbé en gare de bordeaux (gironde), avec des retards allant jusqu'à douze heures. un acte de malveillance en serait à l'origine, selon la sncf.",
+      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
+      "source": "France Info SNCF",
+      "importance": 1,
+      "link": "https://www.francetvinfo.fr/economie/transports/sncf/economie/transports/sncf/sncf-l-incendie-de-cables-de-signalisation-provoque-d-importants-retards-en-gare-de-bordeaux_7493125.html"
+    },
+    {
+      "date": "2026-09-18",
+      "type": "greve",
+      "title": "Grève du 18 septembre : tgv, métro, intercités… ce qui nous attend jeudi dans les transports en commun la grève nationale s'annonce massive pour la grande journée de mobilisation du jeudi 18 septembre : 800 000 personnes sont attendues dans les cortèges et un tiers de grévistes sont prévus dans les écoles. voici le point sur les perturbations dans les transports.",
+      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
+      "source": "France Info SNCF",
+      "importance": 1,
+      "link": "https://www.francetvinfo.fr/economie/transports/sncf/economie/greve/greve-des-transports/greve-du-18-septembre-tgv-metro-intercites-ce-qui-nous-attend-jeudi-dans-les-transports-en-commun_7497259.html"
+    },
+    {
+      "date": "2026-09-18",
+      "type": "greve",
+      "title": "\"s'ils conservent leurs tarifs, c'est une très bonne nouvelle\" : la compagnie italienne trenitalia va augmenter son nombre de trains paris-lyon se dirige-t-on vers un jeudi noir dans les transports ? c'est en tout cas ce qui semble se dessiner pour la grande journée de mobilisation des syndicats, le 18 septembre. les concurrents de la sncf pourraient bien en profiter, comme l'italien trenitalia, qui compte augmenter ses trains entre paris et lyon.",
+      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
+      "source": "France Info SNCF",
+      "importance": 1,
+      "link": "https://www.francetvinfo.fr/economie/transports/sncf/economie/transports/sncf/s-ils-conservent-leurs-tarifs-c-est-une-tres-bonne-nouvelle-la-compagnie-italienne-trenitalia-va-augmenter-son-nombre-de-trains-paris-lyon_7493650.html"
+    },
+    {
+      "date": "2026-09-18",
+      "type": "greve",
+      "title": "Grève du 2 octobre : \"près de 600 000\" personnes ont manifesté en france selon la cgt, 195 000 d'après le ministère de l'intérieur, en baisse par rapport au 18 septembre le syndicat avait comptabilisé plus d'un million de manifestants le 18 septembre, contre 505 000 côté ministère.",
+      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
+      "source": "France Info Grèves",
+      "importance": 1,
+      "link": "https://www.francetvinfo.fr/societe/greve/economie/greve/direct-greve-nationale-du-2-octobre-jour-j-pour-les-syndicats-qui-appellent-a-de-nouvelles-mobilisations-contre-l-austerite-budgetaire_7527007.html"
+    },
+    {
+      "date": "2026-09-18",
+      "type": "greve",
+      "title": "Grève du 2 octobre : environ 195 000 personnes ont manifesté en france selon le ministère de l'intérieur, \"près de 600 000\" d'après la cgt c'est moins que la journée du 18 septembre, qui avait rassemblé 500 000 personnes selon le ministère, un million selon le syndicat.",
+      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
+      "source": "France Info Grèves",
+      "importance": 1,
+      "link": "https://www.francetvinfo.fr/societe/greve/economie/greve/greve-du-2-octobre-environ-195-000-personnes-ont-manifeste-en-france-selon-le-ministere-de-l-interieur-pres-de-600-000-d-apres-la-cgt_7528024.html"
+    },
+    {
+      "date": "2026-09-18",
+      "type": "greve",
+      "title": "Grève du 2 octobre : un bilan en demi-teinte avec moins de monde dans les rues, mais une colère intacte assurent les militants la deuxième journée de mobilisation à l'appel des syndicats s'est déroulée ce jeudi 2 octobre : 250 cortèges ont défilé partout en france dans le calme et 195 000 manifestants étaient dans la rue, selon la police, et 600 000 selon la cgt. un chiffre en baisse par rapport au 18 septembre. retour sur cette journée de grève.",
+      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
+      "source": "France Info Grèves",
+      "importance": 1,
+      "link": "https://www.francetvinfo.fr/societe/greve/economie/greve/greve/greve-du-2-octobre-un-bilan-en-demi-teinte-avec-moins-de-monde-dans-les-rues-mais-une-colere-intacte-assurent-les-militants_7528000.html"
+    },
+    {
+      "date": "2026-09-18",
+      "type": "greve",
+      "title": "Grève du 2 octobre : le gouvernement se dit \"attentif\" pour cette nouvelle journée de mobilisation, mais \"pas inquiet\" avant le discours de politique générale et les derniers arbitrages du premier ministre, l'intersyndicale convoque une nouvelle journée de grève et manifestations jeudi, pour tenter de décrocher des mesures de \"justice sociale\", mais la mobilisation s'annonce moins importante que le 18 septembre.",
+      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
+      "source": "France Info Grèves",
+      "importance": 1,
+      "link": "https://www.francetvinfo.fr/societe/greve/economie/greve/greve-du-2-octobre-le-gouvernement-se-dit-attentif-de-cette-nouvelle-journee-de-mobilisation-mais-pas-inquiet_7527103.html"
+    },
+    {
+      "date": "2026-09-18",
+      "type": "greve",
+      "title": "Dans la rue, les transports, les écoles... a quoi faut-il s'attendre pour l'appel à la grève nationale du jeudi 2 octobre ? après les manifestations du 18 septembre, l'intersyndicale a appelé à une nouvelle journée de mobilisation pour mettre la pression sur le premier ministre, sébastien lecornu, en vue du budget 2026.",
+      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
+      "source": "France Info Grèves",
+      "importance": 1,
+      "link": "https://www.francetvinfo.fr/societe/greve/economie/greve/dans-la-rue-dans-les-transports-dans-les-ecoles-a-quoi-faut-il-s-attendre-pour-l-appel-a-la-greve-nationale-du-jeudi-2-octobre_7521085.html"
+    },
+    {
+      "date": "2026-09-18",
+      "type": "greve",
+      "title": "Grève du 18 septembre : quel regard les non-grévistes portent-ils sur le mouvement ?",
+      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
+      "source": "France Info Grèves",
+      "importance": 1,
+      "link": "https://www.francetvinfo.fr/societe/greve/economie/greve/greve/greve-du-18-septembre-quel-regard-les-non-grevistes-portent-ils-sur-le-mouvement_7499986.html"
     }
   ]
 }
