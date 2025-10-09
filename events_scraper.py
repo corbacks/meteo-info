@@ -113,66 +113,129 @@ def scrape_lia_disruptions(debug=True):
     return events
 
 
-def scrape_mouvements_sociaux():
-    """Scrape actualités pour mouvements sociaux"""
+def scrape_greves(debug=True):
+    """
+    Scrape les infos de grèves (France + Le Havre) depuis plusieurs sources médias et open data.
+    Donne des événements datés, sourcés et pertinents.
+    """
+    import requests
+    from bs4 import BeautifulSoup
+    import re
+    from datetime import datetime, timedelta
+
     events = []
-    
-    try:
-        rss_sources = [
-            'https://www.francetvinfo.fr/titres.rss',
-            'https://www.lemonde.fr/rss/une.xml'
-        ]
-        
-        keywords = ['grève', 'greve', 'mouvement social', 'manifestation', 'préavis']
-        
-        months_map = {
-            'janvier': 1, 'février': 2, 'fevrier': 2, 'mars': 3, 'avril': 4,
-            'mai': 5, 'juin': 6, 'juillet': 7, 'août': 8, 'aout': 8,
-            'septembre': 9, 'octobre': 10, 'novembre': 11, 'décembre': 12, 'decembre': 12
-        }
-        
-        for rss_url in rss_sources:
-            try:
-                resp = requests.get(rss_url, timeout=10)
-                if resp.status_code == 200:
-                    content = resp.text.lower()
-                    
-                    for keyword in keywords:
-                        if keyword in content:
-                            # Extraire dates
-                            date_patterns = re.findall(
-                                r'(\d{1,2})\s+(janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|novembre|décembre|decembre)',
-                                content
-                            )
-                            
-                            for day, month in date_patterns[:2]:
-                                try:
-                                    month_num = months_map.get(month)
-                                    if month_num:
-                                        year = datetime.now().year
-                                        if month_num < datetime.now().month:
-                                            year += 1
-                                        
-                                        event_date = datetime(year, month_num, int(day))
-                                        
-                                        if datetime.now() <= event_date <= datetime.now() + timedelta(days=14):
-                                            events.append({
-                                                'date': event_date.strftime('%Y-%m-%d'),
-                                                'type': 'greve',
-                                                'title': 'Mouvement social annoncé',
-                                                'description': 'Mouvement social mentionné dans l\'actualité',
-                                                'source': 'Actualités'
-                                            })
-                                except:
-                                    pass
-                            break
-            except:
-                pass
-                
-    except Exception as e:
-        print(f"⚠️ Erreur actualités: {e}")
-    
+    today = datetime.now().date()
+
+    sources = [
+        # Actualités nationales
+        ("https://www.service-public.fr/particuliers/actualites", "Service Public (officiel)"),
+        ("https://www.francetvinfo.fr/economie/transports/sncf/", "France Info SNCF"),
+        ("https://www.francetvinfo.fr/societe/greve/", "France Info Grèves"),
+        # Locales
+        ("https://actu.fr/normandie/le-havre/", "Actu.fr Le Havre"),
+    ]
+
+    months_map = {
+        'janvier': 1, 'février': 2, 'fevrier': 2, 'mars': 3, 'avril': 4,
+        'mai': 5, 'juin': 6, 'juillet': 7, 'août': 8, 'aout': 8,
+        'septembre': 9, 'octobre': 10, 'novembre': 11, 'décembre': 12, 'decembre': 12
+    }
+
+    if debug:
+        print("📰 [Grèves] Scraping des sources d'actualités...")
+
+    for url, label in sources:
+        try:
+            resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+            if resp.status_code != 200:
+                continue
+            soup = BeautifulSoup(resp.text, "html.parser")
+
+            # On cherche tous les liens contenant "grève" ou "mouvement social"
+            links = soup.find_all("a", href=True)
+            for a in links:
+                text = a.get_text(" ", strip=True)
+                if not text:
+                    continue
+                lower = text.lower()
+
+                # 🎯 Filtrage : garder seulement les articles pertinents
+                if not re.search(r"\b(gr[eè]ve|mouvement social|perturbation|sncf|lia|transports)\b", lower):
+                    continue
+
+                # Déterminer le lien absolu
+                href = a["href"]
+                if not href.startswith("http"):
+                    href = url.rstrip("/") + "/" + href.lstrip("/")
+
+                # Extraire les dates dans le titre ou la page
+                date_matches = re.findall(
+                    r"(\d{1,2})\s+(janvier|février|fevrier|mars|avril|mai|juin|"
+                    r"juillet|ao[uû]t|septembre|octobre|novembre|d[ée]cembre)",
+                    text.lower()
+                )
+
+                # Charger la page pour plus de contexte (petit scraping ciblé)
+                sub_desc = ""
+                try:
+                    sub_resp = requests.get(href, headers={"User-Agent": "Mozilla/5.0"}, timeout=8)
+                    sub_soup = BeautifulSoup(sub_resp.text, "html.parser")
+                    paragraphs = sub_soup.find_all("p")
+                    if paragraphs:
+                        sub_desc = " ".join(p.get_text(" ", strip=True) for p in paragraphs[:3])
+                except:
+                    pass
+
+                # Déterminer la gravité
+                importance = 1
+                if re.search(r"\bnationale|toute la france|sncf|transilien|r[aâ]t[pf]|enseignants?\b", sub_desc):
+                    importance = 3
+                elif re.search(r"le\s*havre|lia|transports urbains|universit", sub_desc):
+                    importance = 2
+
+                # Extraire date(s)
+                if date_matches:
+                    for day, month in date_matches[:3]:
+                        try:
+                            m = months_map.get(month.replace("û", "u"))
+                            year = datetime.now().year
+                            if m and m < datetime.now().month:
+                                year += 1
+                            d = datetime(year, m, int(day)).date()
+                            if d >= today - timedelta(days=1):
+                                events.append({
+                                    "date": d.strftime("%Y-%m-%d"),
+                                    "type": "greve",
+                                    "title": text.strip().capitalize(),
+                                    "description": sub_desc[:300] + "...",
+                                    "source": label,
+                                    "importance": importance,
+                                    "link": href
+                                })
+                        except:
+                            pass
+                else:
+                    # Si pas de date trouvée, on garde les articles très récents ou importants
+                    if importance >= 2:
+                        events.append({
+                            "date": today.strftime("%Y-%m-%d"),
+                            "type": "greve",
+                            "title": text.strip().capitalize(),
+                            "description": sub_desc[:300] + "...",
+                            "source": label,
+                            "importance": importance,
+                            "link": href
+                        })
+
+        except Exception as e:
+            if debug:
+                print(f"⚠️ Erreur scraping {label}: {e}")
+
+    if debug:
+        print(f"✅ [Grèves] {len(events)} événement(s) détecté(s) au total")
+
     return events
+
 
 def get_jours_feries():
     """Jours fériés français officiels"""
