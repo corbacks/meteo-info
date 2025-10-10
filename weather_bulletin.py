@@ -579,11 +579,11 @@ def send_bulletin():
     if avg_code < 3:
         color = 0xFFD700  # Doré (beau temps)
     elif avg_code < 50:
-        color = 0x87CEEB  # Bleu ciel (nuageux)
+        color = 0xd4d4d4  # Bleu ciel (nuageux)
     elif avg_code < 70:
-        color = 0x4682B4  # Bleu acier (pluie légère)
+        color = 0x5976e7  # Bleu acier (pluie légère)
     else:
-        color = 0x4169E1  # Bleu royal (pluie/orage)
+        color = 0x0529b9  # Bleu royal (pluie/orage)
     
     embed = {
         "title": "📰 Bulletin Quotidien du Havre",
