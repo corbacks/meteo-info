@@ -1,6 +1,20 @@
 {
-  "last_update": "2025-10-23T06:51:52.385157",
+  "last_update": "2025-10-23T14:42:57.625616",
   "events": [
+    {
+      "date": "2025-10-23",
+      "type": "transport",
+      "title": "Commercialservice Tramway A/B - Retards À Prévoircommercial- Jusqu'Au 23/10/2025Lia - 23/10/2025 À 15H05 - Incident Momentané - Service Tramway A Et B Perturbé - Retards À Prévoir - Infos Www.Transports-Lia.Fr",
+      "description": "commercial service tramway a/b - retards à prévoir commercial - jusqu'au 23/10/2025 lia - 23/10/2025 à 15h05 - incident momentané - service tramway a et b perturbé - retards à...",
+      "source": "LiA Transports"
+    },
+    {
+      "date": "2025-10-24",
+      "type": "transport",
+      "title": "Commercialservice Tramway A/B - Retards À Prévoircommercial- Jusqu'Au 23/10/2025Lia - 23/10/2025 À 15H05 - Incident Momentané - Service Tramway A Et B Perturbé - Retards À Prévoir - Infos Www.Transports-Lia.Fr",
+      "description": "commercial service tramway a/b - retards à prévoir commercial - jusqu'au 23/10/2025 lia - 23/10/2025 à 15h05 - incident momentané - service tramway a et b perturbé - retards à...",
+      "source": "LiA Transports"
+    },
     {
       "date": "2025-11-01",
       "type": "ferie",
