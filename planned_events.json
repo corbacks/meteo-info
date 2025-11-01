@@ -1,13 +1,6 @@
 {
-  "last_update": "2025-10-31T14:10:50.926646",
+  "last_update": "2025-11-01T06:13:57.352677",
   "events": [
-    {
-      "date": "2025-11-01",
-      "type": "ferie",
-      "title": "Toussaint",
-      "description": "Jour férié - Services publics fermés",
-      "source": "Calendrier officiel"
-    },
     {
       "date": "2025-11-11",
       "type": "ferie",
