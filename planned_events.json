@@ -1,6 +1,24 @@
 {
-  "last_update": "2025-11-01T14:08:09.281933",
+  "last_update": "2025-11-02T06:14:38.636632",
   "events": [
+    {
+      "date": "2025-11-03",
+      "type": "greve",
+      "title": ": le dernier publié trains, avions : comment faire voyager les enfants seuls ? les vacances de la toussaint touchent à leur fin. lundi 3 novembre, c'est le retour à l'école. pour rentrer chez eux, de plus en plus d'enfants prennent le train tout seuls, encadrés par des animateurs de la sncf. la formule séduit. diffusé le 01/11 1min",
+      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
+      "source": "France Info SNCF",
+      "importance": 1,
+      "link": "https://www.francetvinfo.fr/economie/transports/sncf/replay-jt/france-2/20-heures/trains-avions-comment-faire-voyager-les-enfants-seuls_7589474.html"
+    },
+    {
+      "date": "2025-11-03",
+      "type": "greve",
+      "title": ": la dernière vidéo trains, avions : comment faire voyager les enfants seuls ? les vacances de la toussaint touchent à leur fin. lundi 3 novembre, c'est le retour à l'école. pour rentrer chez eux, de plus en plus d'enfants prennent le train tout seuls, encadrés par des animateurs de la sncf. la formule séduit. diffusé le 01/11 2min",
+      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
+      "source": "France Info SNCF",
+      "importance": 1,
+      "link": "https://www.francetvinfo.fr/economie/transports/sncf/replay-jt/france-2/20-heures/trains-avions-comment-faire-voyager-les-enfants-seuls_7589474.html"
+    },
     {
       "date": "2025-11-11",
       "type": "ferie",
