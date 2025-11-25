@@ -1,4 +1,12 @@
 {
-  "last_update": "2025-11-24T14:11:28.570111",
-  "events": []
+  "last_update": "2025-11-25T06:16:53.905751",
+  "events": [
+    {
+      "date": "2025-12-25",
+      "type": "ferie",
+      "title": "Noël",
+      "description": "Jour férié - Services publics fermés",
+      "source": "Calendrier officiel"
+    }
+  ]
 }
