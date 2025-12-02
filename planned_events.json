@@ -1,10 +1,10 @@
 {
-  "last_update": "2025-12-01T14:11:57.235654",
+  "last_update": "2025-12-02T06:17:36.093484",
   "events": [
     {
       "date": "2025-12-02",
       "type": "greve",
-      "title": ": le dernier publié grève du 2 décembre : transports, écoles, administrations... a quoi s'attendre mardi pour la journée de mobilisation ? cette journée d'action nationale est initiée par la cgt, fsu et solidaires, qui se mobilisent \"pour les salaires\" et \"la justice sociale\". diffusé le 01/12 3min",
+      "title": "Grève du 2 décembre : transports, écoles, administrations... a quoi s'attendre mardi pour la journée de mobilisation ? cette journée d'action nationale est initiée par la cgt, fsu et solidaires, qui se mobilisent \"pour les salaires\" et \"la justice sociale\".",
       "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
       "source": "France Info SNCF",
       "importance": 1,
@@ -14,6 +14,13 @@
       "date": "2025-12-25",
       "type": "ferie",
       "title": "Noël",
+      "description": "Jour férié - Services publics fermés",
+      "source": "Calendrier officiel"
+    },
+    {
+      "date": "2026-01-01",
+      "type": "ferie",
+      "title": "Jour de l'an",
       "description": "Jour férié - Services publics fermés",
       "source": "Calendrier officiel"
     }
