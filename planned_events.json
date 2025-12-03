@@ -1,24 +1,6 @@
 {
-  "last_update": "2025-12-02T14:13:12.100344",
+  "last_update": "2025-12-03T06:17:15.655704",
   "events": [
-    {
-      "date": "2025-12-02",
-      "type": "greve",
-      "title": "Grève du 2 décembre : transports, écoles, administrations... a quoi s'attendre mardi pour la journée de mobilisation ? cette journée d'action nationale est initiée par la cgt, fsu et solidaires, qui se mobilisent \"pour les salaires\" et \"la justice sociale\".",
-      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
-      "source": "France Info SNCF",
-      "importance": 1,
-      "link": "https://www.francetvinfo.fr/economie/transports/sncf/economie/transports/sncf/greve-a-la-sncf/greve-du-2-decembre-transports-ecoles-administrations-a-quoi-s-attendre-mardi-pour-la-journee-de-mobilisation_7650917.html"
-    },
-    {
-      "date": "2025-12-02",
-      "type": "greve",
-      "title": "Grève du 2 décembre : \"il faut d'autres choix budgétaires\", réclame sophie vénétitay, secrétaire générale du snes-fsu la représentante syndicale des enseignants du second degré était invitée sur france culture ce mardi, à l'occasion de la mobilisation interprofessionnelle pour les salaires et la justice sociale.",
-      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
-      "source": "France Info Grèves",
-      "importance": 1,
-      "link": "https://www.francetvinfo.fr/societe/greve/economie/greve/greve-du-2-decembre-il-faut-d-autres-choix-budgetaires-reclame-sophie-venetitay-secretaire-generale-du-snes-fsu_7653026.html"
-    },
     {
       "date": "2025-12-25",
       "type": "ferie",
