@@ -1,24 +1,6 @@
 {
-  "last_update": "2025-12-17T14:12:35.893948",
+  "last_update": "2025-12-18T06:18:19.139459",
   "events": [
-    {
-      "date": "2025-12-17",
-      "type": "greve",
-      "title": ": le dernier publié sncf : \"le service tgv en france n'est plus un service public\", analyse françois delétraz, président de la fédération des usagers des transports mercredi 17 décembre, françois delétraz, président de la fédération des usagers des transports, était l'invité du 11h/13h de franceinfo. il est venu étayer l'enquête réalisée par son association concernant l'augmentation des tarifs des billets ouigo. l'étude de la fédération montre une hausse des prix de 73 % depuis 2017. diffusé le 17/12 4min",
-      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
-      "source": "France Info SNCF",
-      "importance": 1,
-      "link": "https://www.francetvinfo.fr/economie/transports/sncf/replay-jt/franceinfo/12-13-info/sncf-le-service-tgv-en-france-n-est-plus-un-service-public-analyse-francois-deletraz-president-de-la-federation-des-usagers-des-transports_7685524.html"
-    },
-    {
-      "date": "2025-12-17",
-      "type": "greve",
-      "title": ": la dernière vidéo sncf : \"le service tgv en france n'est plus un service public\", analyse françois delétraz, président de la fédération des usagers des transports mercredi 17 décembre, françois delétraz, président de la fédération des usagers des transports, était l'invité du 11h/13h de franceinfo. il est venu étayer l'enquête réalisée par son association concernant l'augmentation des tarifs des billets ouigo. l'étude de la fédération montre une hausse des prix de 73 % depuis 2017. diffusé le 17/12 8min",
-      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
-      "source": "France Info SNCF",
-      "importance": 1,
-      "link": "https://www.francetvinfo.fr/economie/transports/sncf/replay-jt/franceinfo/12-13-info/sncf-le-service-tgv-en-france-n-est-plus-un-service-public-analyse-francois-deletraz-president-de-la-federation-des-usagers-des-transports_7685524.html"
-    },
     {
       "date": "2025-12-25",
       "type": "ferie",
