@@ -1,12 +1,23 @@
 {
-  "last_update": "2025-12-31T14:11:21.896490",
+  "last_update": "2026-01-01T06:18:47.094718",
   "events": [
     {
-      "date": "2026-01-01",
-      "type": "ferie",
-      "title": "Jour de l'an",
-      "description": "Jour férié - Services publics fermés",
-      "source": "Calendrier officiel"
+      "date": "2026-01-04",
+      "type": "greve",
+      "title": "Grève des aiguilleurs sncf : la mobilisation se poursuit en picardie jusqu’au 4 janvier, sept lignes de trains perturbées les horaires des trains sont consultables sur le site internet ter hauts-de-france, indique la sncf.",
+      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
+      "source": "France Info SNCF",
+      "importance": 1,
+      "link": "https://www.francetvinfo.fr/economie/transports/sncf/economie/transports/sncf/greve-a-la-sncf/greve-des-aiguilleurs-sncf-la-mobilisation-se-poursuit-en-picardie-jusqu-au-4-janvier-sept-lignes-de-trains-perturbees_7703317.html"
+    },
+    {
+      "date": "2026-01-08",
+      "type": "greve",
+      "title": "Transports : train, bus, voiture... la bataille des prix pour les vacances d'hiver les billets de train de la sncf sont en vente depuis mercredi 12 novembre, pour la période du 8 janvier au 29 mars. les trajets vers les stations de ski partent très vite. c'est d'ailleurs une offre que développe la sncf, pour inciter les vacanciers à prendre le train pour partir à la montagne.",
+      "description": "Recevez l'essentiel de l'actualité et restez à jour avec nos newsletters  ...",
+      "source": "France Info SNCF",
+      "importance": 1,
+      "link": "https://www.francetvinfo.fr/economie/transports/sncf/replay-jt/france-2/13-heures/train-bus-voiture-la-bataille-des-prix-pour-les-vacances-d-hiver_7611578.html"
     }
   ]
 }
